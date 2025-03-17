@@ -24,8 +24,8 @@ Built with `customtkinter` for a modern GUI, `Flask` for the API backend, and in
 *(Add screenshots here once you have them, e.g., search interface, chat window, summary popup)*
 
 - Search Tab: ![Search Tab](screenshots/2.PNG)
-- Chat Assistant: ![Chat Assistant](\\fs0\个人云盘\13116217571\Pictures\Screenshots\4.png)
-- OCR Summary: ![OCR Summary](\\fs0\个人云盘\13116217571\Pictures\Screenshots\3.png)
+- Chat Assistant: ![Chat Assistant](screenshots/4.PNG)
+- OCR Summary: ![OCR Summary](screenshots/3.PNG)
 
 ---
 
