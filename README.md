@@ -1,7 +1,7 @@
 # FileFinder
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue)
-![Docker](https://img.shields.io/badge/Docker-Compose-blue)
+![Flask](https://img.shields.io/badge/Flask-3.0.0-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 **Smart File Finder & Chat Assistant** is a Python-based desktop application designed to help users efficiently search, manage, and summarize documents and images. Leveraging advanced AI capabilities, including text and image embeddings, OCR (Optical Character Recognition), and natural language processing, this tool provides a seamless experience for organizing and retrieving information from files stored locally or on network drives.
