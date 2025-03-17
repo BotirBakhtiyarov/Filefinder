@@ -14,10 +14,10 @@ import time
 import customtkinter as ctk
 
 class SearchFrame(ctk.CTkFrame):
-    def __init__(self, master):
+    def __init__(self, master, index_file):
         super().__init__(master)
         self.master = master
-        self.index_file = "file_index.json"
+        self.index_file = index_file  # Use passed index_file path
         self.indexing_in_progress = False
         self.stop_indexing = threading.Event()
         self.load_index()
@@ -67,7 +67,10 @@ class SearchFrame(ctk.CTkFrame):
 
     def load_index(self):
         self.index_data = {"text": {}, "images": {}}
-        if os.path.exists(self.index_file):
+        if not os.path.exists(self.index_file):
+            with open(self.index_file, "w", encoding="utf-8") as f:
+                json.dump(self.index_data, f)
+        else:
             with open(self.index_file, "r", encoding="utf-8") as f:
                 self.index_data = json.load(f)
 
@@ -230,50 +233,44 @@ class SearchFrame(ctk.CTkFrame):
         return sorted(scores, key=lambda x: x[1], reverse=True)[:5]
 
     def display_results(self, text_results, image_results):
-        # Display text results (unchanged)
         for path, score in text_results:
             frame = ctk.CTkFrame(self.text_scroll)
             frame.pack(fill="x", pady=2)
-            norm_path = norm_path = os.path.normpath(path)
             ctk.CTkLabel(frame, text=f"{os.path.basename(path)} ({score:.1%})").pack(side="left", padx=5)
-            ctk.CTkButton(frame, text="Open", width=50, command=lambda p=norm_path: os.startfile(p)).pack(side="right", padx=5)
+            norm_path = os.path.normpath(path)
+            ctk.CTkButton(frame, text="Open", width=50, command=lambda p=norm_path: self.open_file(p)).pack(side="right", padx=5)
             ctk.CTkButton(frame, text="Summary", width=70, command=lambda p=norm_path: self.show_summary(p)).pack(side="right", padx=5)
 
-        # Display image results with Open and OCR Summary buttons
         row, col = 0, 0
         for path, score in image_results:
             img = Image.open(path).resize((200, 200))
             photo = CTkImage(light_image=img, size=(200, 200))
             frame = ctk.CTkFrame(self.image_scroll)
             frame.grid(row=row, column=col, padx=5, pady=5)
-
-            # Image display
             ctk.CTkLabel(frame, image=photo, text="").pack()
-
-            # File name and score
             ctk.CTkLabel(frame, text=f"{os.path.basename(path)}\n({score:.1%})").pack()
-
-            # Button frame for Open and OCR Summary
             btn_frame = ctk.CTkFrame(frame)
             btn_frame.pack(pady=5)
             norm_path = os.path.normpath(path)
-            # Open button
-            ctk.CTkButton(btn_frame, text="Open", width=70, command=lambda p=norm_path: os.startfile(p)).pack(side="left", padx=5)
-
-            # OCR Summary button
-            ctk.CTkButton(btn_frame, text="OCR+ AI Summary", width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
-
+            ctk.CTkButton(btn_frame, text="Open", width=70, command=lambda p=norm_path: self.open_file(p)).pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text="OCR Summary", width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
             col = (col + 1) % 3
             row += 1 if col == 0 else 0
 
         self.progress_bar.stop()
         self.status_var.set(self.master.get_translation("status_ready"))
-    
-    def show_ocr_summary(self, image_path):
-        """Display a summary window with OCR-extracted text from the image."""
-        # Create a new SummaryWindow instance specifically for OCR
-        SummaryWindow(self, image_path, use_ocr=True)    
-        
-        
+
+    def open_file(self, path):
+        try:
+            if os.path.exists(path):
+                os.startfile(path)
+            else:
+                messagebox.showerror("Error", f"File not found: {path}")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to open file: {str(e)}")
+
     def show_summary(self, file_path):
         SummaryWindow(self, file_path)
+
+    def show_ocr_summary(self, image_path):
+        SummaryWindow(self, image_path, use_ocr=True)

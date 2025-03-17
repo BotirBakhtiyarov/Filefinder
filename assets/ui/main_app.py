@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 import customtkinter as ctk
 from tkinter import messagebox
 from pynput import keyboard
@@ -10,6 +11,21 @@ from .setup_wizard import SetupWizard
 class MainApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+        # Set base path and appdata path
+        if getattr(sys, 'frozen', False):  # Running as .exe
+            self.base_path = os.path.dirname(sys.executable)
+        else:  # Running as .py
+            self.base_path = os.path.dirname(os.path.abspath(__file__))
+
+        # Use APPDATA for writable storage
+        appdata = os.getenv('APPDATA')
+        self.appdata_path = os.path.join(appdata, "FileFinder")
+        if not os.path.exists(self.appdata_path):
+            os.makedirs(self.appdata_path)
+
+        self.config_file = os.path.join(self.appdata_path, "config.json")
+        self.index_file = os.path.join(self.appdata_path, "file_index.json")
+
         self.title("Smart File Finder & Chat Assistant")
         self.geometry("1200x800")
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
@@ -18,12 +34,11 @@ class MainApp(ctk.CTk):
         self.dark_mode = ctk.BooleanVar(value=True)
         self.api_url = ""
         self.api_key = ""
-        self.chat_api_url = ""
+        self.chat_api_url = "http://10.20.1.213/v1/chat-messages"
         self.chat_api_key = ""
         self.document_dir = ""
         self.image_dir = ""
 
-        self.config_file = "config.json"
         if not os.path.exists(self.config_file):
             self.show_setup_wizard()
         else:
@@ -54,8 +69,23 @@ class MainApp(ctk.CTk):
         self.initialize_ui()
 
     def load_config(self):
-        with open(self.config_file, "r") as f:
-            self.config = json.load(f)
+        if not os.path.exists(self.config_file):
+            default_config = {
+                "api_url": "",
+                "api_key": "",
+                "chat_api_url": "http://10.20.1.213/v1/chat-messages",
+                "chat_api_key": "",
+                "document_dir": "",
+                "image_dir": "",
+                "language": "en",
+                "dark_mode": True
+            }
+            with open(self.config_file, "w") as f:
+                json.dump(default_config, f, indent=4)
+            self.config = default_config
+        else:
+            with open(self.config_file, "r") as f:
+                self.config = json.load(f)
         self.api_url = self.config["api_url"]
         self.api_key = self.config["api_key"]
         self.chat_api_url = self.config["chat_api_url"]
@@ -100,7 +130,7 @@ class MainApp(ctk.CTk):
         self.settings_btn = ctk.CTkButton(self.menu_frame, text="⚙", width=40, command=self.show_settings)
         self.settings_btn.pack(side="right", padx=10)
 
-        self.search_frame = SearchFrame(self)
+        self.search_frame = SearchFrame(self, self.index_file)
         self.chat_frame = ChatFrame(self)
         self.switch_mode()
 
