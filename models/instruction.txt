@@ -1,0 +1,3 @@
+#need to download models from huggingface.co
+https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+https://huggingface.co/OFA-Sys/chinese-clip-vit-base-patch16
