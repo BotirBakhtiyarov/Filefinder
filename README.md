@@ -170,6 +170,12 @@ Please ensure your code follows PEP 8 style guidelines and includes appropriate 
 
 ---
 
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
 ## Acknowledgments
 
 - [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) for the modern GUI framework.
