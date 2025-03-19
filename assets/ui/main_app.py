@@ -121,9 +121,12 @@ class MainApp(ctk.CTk):
         )
         self.lang_segmented.pack(side="left", padx=10)
 
-        self.mode_var = ctk.StringVar(value="Search")
+        self.mode_var = ctk.StringVar(value=self.get_translation("search"))
         self.mode_segmented = ctk.CTkSegmentedButton(
-            self.menu_frame, values=["Search", "Chat"], variable=self.mode_var, command=self.switch_mode
+            self.menu_frame,
+            values=[self.get_translation("search"), self.get_translation("chat")],
+            variable=self.mode_var,
+            command=self.switch_mode
         )
         self.mode_segmented.pack(side="left", padx=10)
 
@@ -138,7 +141,7 @@ class MainApp(ctk.CTk):
         mode = self.mode_var.get()
         for frame in [self.search_frame, self.chat_frame]:
             frame.pack_forget()
-        if mode == "Search":
+        if mode == self.get_translation("search"):
             self.search_frame.pack(fill="both", expand=True)
         else:
             self.chat_frame.pack(fill="both", expand=True)
@@ -146,6 +149,8 @@ class MainApp(ctk.CTk):
     def update_language(self, *args):
         self.search_frame.update_texts()
         self.chat_frame.update_texts()
+        self.mode_var.set(self.get_translation("search"))
+        self.mode_segmented.configure(values=[self.get_translation("search"), self.get_translation("chat")])
 
     def show_settings(self):
         if hasattr(self, "settings_window") and self.settings_window.winfo_exists():
@@ -153,7 +158,7 @@ class MainApp(ctk.CTk):
             return
         self.settings_window = ctk.CTkToplevel(self)
         self.settings_window.title("Settings")
-        self.settings_window.geometry("400x500")
+        self.settings_window.geometry("400x550")
 
         fields = [
             ("API URL", "api_url"), ("API Key", "api_key"),
@@ -167,15 +172,15 @@ class MainApp(ctk.CTk):
             entry.pack(pady=5)
             self.entries[key] = entry
 
-        ctk.CTkLabel(self.settings_window, text="Document Directory:").pack(pady=5)
+        ctk.CTkLabel(self.settings_window, text=self.get_translation("document_dir")).pack(pady=5)
         self.doc_btn = ctk.CTkButton(self.settings_window, text=self.document_dir, command=self.select_doc_dir)
         self.doc_btn.pack(pady=5)
-        ctk.CTkLabel(self.settings_window, text="Image Directory:").pack(pady=5)
+        ctk.CTkLabel(self.settings_window, text=self.get_translation("image_dir")).pack(pady=5)
         self.img_btn = ctk.CTkButton(self.settings_window, text=self.image_dir, command=self.select_img_dir)
         self.img_btn.pack(pady=5)
 
-        ctk.CTkSwitch(self.settings_window, text="Dark Mode", variable=self.dark_mode, command=self.update_appearance).pack(pady=10)
-        ctk.CTkButton(self.settings_window, text="Save", command=self.save_settings).pack(pady=10)
+        ctk.CTkSwitch(self.settings_window, text=self.get_translation("dark_mode"), variable=self.dark_mode, command=self.update_appearance).pack(pady=10)
+        ctk.CTkButton(self.settings_window, text=self.get_translation("save"), command=self.save_settings).pack(pady=10)
 
     def select_doc_dir(self):
         dir = ctk.filedialog.askdirectory(initialdir=self.document_dir)
@@ -224,7 +229,16 @@ class MainApp(ctk.CTk):
                 "status_ready": "Ready",
                 "status_indexing": "Indexing files...",
                 "send_button": "Send",
-                "new_chat_button": "New Chat"
+                "new_chat_button": "New Chat",
+                "document_dir": "Document Directory:",
+                "image_dir": "Image Directory:",
+                "search": "Search",
+                "chat": "Chat",
+                "open": "Open",
+                "summary": "Summary",
+                "index_folder": "Index Folders",
+                "dark_mode":  "Dark Mode",
+                "save": "Save",
             },
             "zh": {
                 "search_placeholder": "搜索文档和图像...",
@@ -232,7 +246,16 @@ class MainApp(ctk.CTk):
                 "status_ready": "准备就绪",
                 "status_indexing": "正在索引文件...",
                 "send_button": "发送",
-                "new_chat_button": "新聊天"
+                "new_chat_button": "新聊天",
+                "document_dir": "文档目录:",
+                "image_dir": "图像目录：",
+                "search": "搜索",
+                "chat": "聊天",
+                "open": "打开",
+                "summary": "摘要",
+                "index_folder": "索引文件夹",
+                "dark_mode": "暗模式",
+                "save": "保存",
             }
         }
         return translations[self.current_language.get().lower()].get(key, key)

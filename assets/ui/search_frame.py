@@ -46,7 +46,7 @@ class SearchFrame(ctk.CTkFrame):
         )
         self.search_btn.pack(side="left", padx=5)
         self.index_btn = ctk.CTkButton(
-            self.search_frame, text="Index Folders", command=self.select_folders_to_index
+            self.search_frame, text=self.master.get_translation("index_folder"), command=self.select_folders_to_index
         )
         self.index_btn.pack(side="left", padx=5)
 
@@ -61,9 +61,11 @@ class SearchFrame(ctk.CTkFrame):
 
     def update_texts(self):
         self.search_entry.configure(placeholder_text=self.master.get_translation("search_placeholder"))
+        self.index_btn.configure(text=self.master.get_translation("index_folder"))
         self.search_btn.configure(text=self.master.get_translation("search_button"))
         if not self.indexing_in_progress:
             self.status_var.set(self.master.get_translation("status_ready"))
+
 
     def load_index(self):
         self.index_data = {"text": {}, "images": {}}
@@ -238,8 +240,8 @@ class SearchFrame(ctk.CTkFrame):
             frame.pack(fill="x", pady=2)
             ctk.CTkLabel(frame, text=f"{os.path.basename(path)} ({score:.1%})").pack(side="left", padx=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(frame, text="Open", width=50, command=lambda p=norm_path: self.open_file(p)).pack(side="right", padx=5)
-            ctk.CTkButton(frame, text="Summary", width=70, command=lambda p=norm_path: self.show_summary(p)).pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("open"), width=50, command=lambda p=norm_path: self.open_file(p)).pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("summary"), width=70, command=lambda p=norm_path: self.show_summary(p)).pack(side="right", padx=5)
 
         row, col = 0, 0
         for path, score in image_results:
@@ -252,8 +254,8 @@ class SearchFrame(ctk.CTkFrame):
             btn_frame = ctk.CTkFrame(frame)
             btn_frame.pack(pady=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(btn_frame, text="Open", width=70, command=lambda p=norm_path: self.open_file(p)).pack(side="left", padx=5)
-            ctk.CTkButton(btn_frame, text="OCR Summary", width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("open"), width=70, command=lambda p=norm_path: self.open_file(p)).pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("summary"), width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
             col = (col + 1) % 3
             row += 1 if col == 0 else 0
 
