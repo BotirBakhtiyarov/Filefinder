@@ -13,7 +13,7 @@ app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
 # Update this to your actual model directory
-MODEL_DIR = "models/"  # Replace with actual path
+MODEL_DIR = r"X:\projects\Ollama\models"  # Replace with actual path
 text_model = SentenceTransformer(os.path.join(MODEL_DIR, "paraphrase-multilingual-MiniLM-L12-v2"))
 clip_model = ChineseCLIPModel.from_pretrained(os.path.join(MODEL_DIR, "chinese-clip-vit-base-patch16"))
 clip_processor = ChineseCLIPProcessor.from_pretrained(os.path.join(MODEL_DIR, "chinese-clip-vit-base-patch16"))

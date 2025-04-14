@@ -7,6 +7,10 @@ from pynput import keyboard
 from .search_frame import SearchFrame
 from .chat_frame import ChatFrame
 from .setup_wizard import SetupWizard
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MainApp(ctk.CTk):
     def __init__(self):
@@ -17,29 +21,44 @@ class MainApp(ctk.CTk):
         else:  # Running as .py
             self.base_path = os.path.dirname(os.path.abspath(__file__))
 
+        # Load translations
+        translation_path = os.path.join(self.base_path, 'translations.json')
+        try:
+            with open(translation_path, 'r', encoding='utf-8') as f:
+                self.translations = json.load(f)
+            logging.debug("Translations loaded successfully")
+        except Exception as e:
+            logging.error(f"Failed to load translations: {str(e)}")
+            messagebox.showerror("Error", f"Cannot load translations: {str(e)}")
+            self.translations = {}
+
         # Use APPDATA for writable storage
         appdata = os.getenv('APPDATA')
         self.appdata_path = os.path.join(appdata, "FileFinder")
         if not os.path.exists(self.appdata_path):
             os.makedirs(self.appdata_path)
+            logging.debug(f"Created appdata directory: {self.appdata_path}")
 
         self.config_file = os.path.join(self.appdata_path, "config.json")
         self.index_file = os.path.join(self.appdata_path, "file_index.json")
 
-        self.title("Smart File Finder & Chat Assistant")
+        self.title("Smart File Finder & Chat Assistant v2")
         self.geometry("1200x800")
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
 
-        self.current_language = ctk.StringVar(value="en")
+        self.current_language = ctk.StringVar(value="EN")
         self.dark_mode = ctk.BooleanVar(value=True)
+        self.chat_models = ["Regular", "OpenAI", "DeepSeek", "Ollama"]
+        self.chat_model = ctk.StringVar(value="Regular")
         self.api_url = ""
         self.api_key = ""
-        self.chat_api_url = "http://10.20.1.213/v1/chat-messages"
+        self.chat_api_url = ""
         self.chat_api_key = ""
         self.document_dir = ""
         self.image_dir = ""
 
         if not os.path.exists(self.config_file):
+            logging.debug("Config file not found, showing setup wizard")
             self.show_setup_wizard()
         else:
             self.load_config()
@@ -55,8 +74,14 @@ class MainApp(ctk.CTk):
         self.wizard.grab_set()
 
     def on_wizard_complete(self, config):
+        logging.debug(f"Received config from wizard: {config}")
         self.config = config
-        self.save_config()
+        try:
+            self.save_config()
+            logging.debug("Config saved in on_wizard_complete")
+        except Exception as e:
+            logging.error(f"Failed to save config: {str(e)}")
+            messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
         self.api_url = config["api_url"]
         self.api_key = config["api_key"]
         self.chat_api_url = config["chat_api_url"]
@@ -64,28 +89,56 @@ class MainApp(ctk.CTk):
         self.document_dir = config["document_dir"]
         self.image_dir = config["image_dir"]
         self.current_language.set(config["language"])
+        self.chat_model.set(config["chat_model"])
         self.dark_mode.set(config["dark_mode"])
         self.wizard.destroy()
         self.initialize_ui()
 
     def load_config(self):
+        # Define default configuration with all expected keys
+        default_config = {
+            "api_url": "",
+            "api_key": "",
+            "chat_api_url": "",
+            "chat_api_key": "",
+            "document_dir": "",
+            "image_dir": "",
+            "language": "EN",
+            "chat_model": "Regular",
+            "dark_mode": True
+        }
+
         if not os.path.exists(self.config_file):
-            default_config = {
-                "api_url": "",
-                "api_key": "",
-                "chat_api_url": "http://10.20.1.213/v1/chat-messages",
-                "chat_api_key": "",
-                "document_dir": "",
-                "image_dir": "",
-                "language": "en",
-                "dark_mode": True
-            }
-            with open(self.config_file, "w") as f:
-                json.dump(default_config, f, indent=4)
+            # If config file doesn't exist, use defaults and save them
             self.config = default_config
+            try:
+                with open(self.config_file, "w") as f:
+                    json.dump(self.config, f, indent=4)
+                logging.debug(f"Created new config file with defaults: {self.config_file}")
+            except Exception as e:
+                logging.error(f"Failed to create config file: {str(e)}")
         else:
-            with open(self.config_file, "r") as f:
-                self.config = json.load(f)
+            # Load existing config file with error handling
+            try:
+                with open(self.config_file, "r") as f:
+                    loaded_config = json.load(f)
+                # Merge default config with loaded config
+                self.config = {**default_config, **loaded_config}
+                logging.debug(f"Loaded config: {self.config}")
+            except json.JSONDecodeError:
+                # If file is corrupted, fall back to defaults
+                logging.warning("Config file is corrupted. Using default config.")
+                self.config = default_config
+
+            # Save the updated config back to the file
+            try:
+                with open(self.config_file, "w") as f:
+                    json.dump(self.config, f, indent=4)
+                logging.debug("Updated config file with merged config")
+            except Exception as e:
+                logging.error(f"Failed to update config file: {str(e)}")
+
+        # Assign config values to instance variables
         self.api_url = self.config["api_url"]
         self.api_key = self.config["api_key"]
         self.chat_api_url = self.config["chat_api_url"]
@@ -93,6 +146,7 @@ class MainApp(ctk.CTk):
         self.document_dir = self.config["document_dir"]
         self.image_dir = self.config["image_dir"]
         self.current_language.set(self.config["language"])
+        self.chat_model.set(self.config.get("chat_model", "Regular"))
         self.dark_mode.set(self.config["dark_mode"])
 
     def save_config(self):
@@ -104,64 +158,94 @@ class MainApp(ctk.CTk):
             "document_dir": self.document_dir,
             "image_dir": self.image_dir,
             "language": self.current_language.get(),
+            "chat_model": self.chat_model.get(),
             "dark_mode": self.dark_mode.get()
         }
-        with open(self.config_file, "w") as f:
-            json.dump(self.config, f, indent=4)
+        try:
+            with open(self.config_file, "w") as f:
+                json.dump(self.config, f, indent=4)
+            logging.debug(f"Saved config to {self.config_file}: {self.config}")
+        except Exception as e:
+            logging.error(f"Failed to save config to {self.config_file}: {str(e)}")
+            raise
 
     def initialize_ui(self):
         ctk.set_appearance_mode("dark" if self.dark_mode.get() else "light")
         ctk.set_default_color_theme("blue")
 
-        self.menu_frame = ctk.CTkFrame(self, height=50)
-        self.menu_frame.pack(fill="x", pady=5)
+        self.grid_columnconfigure(1, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
-        self.lang_segmented = ctk.CTkSegmentedButton(
-            self.menu_frame, values=["EN", "ZH"], variable=self.current_language, command=self.update_language
-        )
-        self.lang_segmented.pack(side="left", padx=10)
+        # Sidebar
+        self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
+        self.sidebar.grid(row=0, column=0, sticky="ns", padx=0, pady=0)
+        self.sidebar.grid_remove()  # Initially hidden
 
-        self.mode_var = ctk.StringVar(value=self.get_translation("search"))
-        self.mode_segmented = ctk.CTkSegmentedButton(
-            self.menu_frame,
-            values=[self.get_translation("search"), self.get_translation("chat")],
-            variable=self.mode_var,
-            command=self.switch_mode
-        )
-        self.mode_segmented.pack(side="left", padx=10)
+        # Sidebar buttons
+        ctk.CTkButton(self.sidebar, text=self.get_translation("search"), command=lambda: self.switch_mode("search"),
+                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=(40,10), padx=10, fill="x")
+        ctk.CTkButton(self.sidebar, text=self.get_translation("chat"), command=lambda: self.switch_mode("chat"),
+                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
+        ctk.CTkButton(self.sidebar, text=self.get_translation("settings"), command=self.show_settings,
+                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
 
-        self.settings_btn = ctk.CTkButton(self.menu_frame, text="⚙", width=40, command=self.show_settings)
-        self.settings_btn.pack(side="right", padx=10)
+        # Content frame
+        self.content_frame = ctk.CTkFrame(self, corner_radius=10)
+        self.content_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
+        # Burger menu button
+        self.burger_btn = ctk.CTkButton(self, text="☰", width=40, command=self.toggle_sidebar, fg_color="#1f6aa8",
+                                        hover_color="#14487f")
+        self.burger_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
+
+        # Initialize SearchFrame and ChatFrame with MainApp as master
         self.search_frame = SearchFrame(self, self.index_file)
+        self.search_frame.place(in_=self.content_frame, x=0, y=0, relwidth=1, relheight=1)
         self.chat_frame = ChatFrame(self)
-        self.switch_mode()
+        self.switch_mode("search")
 
-    def switch_mode(self, *args):
-        mode = self.mode_var.get()
-        for frame in [self.search_frame, self.chat_frame]:
-            frame.pack_forget()
-        if mode == self.get_translation("search"):
-            self.search_frame.pack(fill="both", expand=True)
+    def toggle_sidebar(self):
+        if self.sidebar.winfo_ismapped():
+            self.sidebar.grid_remove()
         else:
-            self.chat_frame.pack(fill="both", expand=True)
+            self.sidebar.grid()
 
-    def update_language(self, *args):
+    def switch_mode(self, mode_key):
+        for frame in [self.search_frame, self.chat_frame]:
+            frame.place_forget()
+        if mode_key == "search":
+            self.search_frame.place(in_=self.content_frame, x=0, y=0, relwidth=1, relheight=1)
+        elif mode_key == "chat":
+            self.chat_frame.place(in_=self.content_frame, x=0, y=0, relwidth=1, relheight=1)
+        self.update_texts()
+
+    def update_texts(self):
         self.search_frame.update_texts()
         self.chat_frame.update_texts()
-        self.mode_var.set(self.get_translation("search"))
-        self.mode_segmented.configure(values=[self.get_translation("search"), self.get_translation("chat")])
 
     def show_settings(self):
         if hasattr(self, "settings_window") and self.settings_window.winfo_exists():
             self.settings_window.lift()
             return
         self.settings_window = ctk.CTkToplevel(self)
-        self.settings_window.title("Settings")
-        self.settings_window.geometry("400x550")
+        self.settings_window.title(self.get_translation("settings"))
+        self.settings_window.geometry("400x600")
+        self.settings_window.resizable(False, False)
+
+        # Language selection
+        ctk.CTkLabel(self.settings_window, text="Language:").pack(pady=5)
+        self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["EN", "ZH", "RU", "UZ"],
+                                             variable=self.current_language)
+        self.lang_option.pack(pady=5)
+
+        # Chat AI model selection
+        ctk.CTkLabel(self.settings_window, text="Chat AI Model:").pack(pady=5)
+        self.chat_model_option = ctk.CTkOptionMenu(self.settings_window, values=self.chat_models,
+                                                   variable=self.chat_model)
+        self.chat_model_option.pack(pady=5)
 
         fields = [
-            ("API URL", "api_url"), ("API Key", "api_key"),
+            ("API URL (Embedding)", "api_url"), ("API Key (Embedding)", "api_key"),
             ("Chat API URL", "chat_api_url"), ("Chat API Key", "chat_api_key")
         ]
         self.entries = {}
@@ -173,14 +257,17 @@ class MainApp(ctk.CTk):
             self.entries[key] = entry
 
         ctk.CTkLabel(self.settings_window, text=self.get_translation("document_dir")).pack(pady=5)
-        self.doc_btn = ctk.CTkButton(self.settings_window, text=self.document_dir, command=self.select_doc_dir)
+        self.doc_btn = ctk.CTkButton(self.settings_window, text=self.document_dir or "Select",
+                                     command=self.select_doc_dir)
         self.doc_btn.pack(pady=5)
         ctk.CTkLabel(self.settings_window, text=self.get_translation("image_dir")).pack(pady=5)
-        self.img_btn = ctk.CTkButton(self.settings_window, text=self.image_dir, command=self.select_img_dir)
+        self.img_btn = ctk.CTkButton(self.settings_window, text=self.image_dir or "Select", command=self.select_img_dir)
         self.img_btn.pack(pady=5)
 
-        ctk.CTkSwitch(self.settings_window, text=self.get_translation("dark_mode"), variable=self.dark_mode, command=self.update_appearance).pack(pady=10)
-        ctk.CTkButton(self.settings_window, text=self.get_translation("save"), command=self.save_settings).pack(pady=10)
+        ctk.CTkSwitch(self.settings_window, text=self.get_translation("dark_mode"), variable=self.dark_mode,
+                      command=self.update_appearance).pack(pady=10)
+        ctk.CTkButton(self.settings_window, text=self.get_translation("save"), command=self.save_settings,
+                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10)
 
     def select_doc_dir(self):
         dir = ctk.filedialog.askdirectory(initialdir=self.document_dir)
@@ -198,6 +285,8 @@ class MainApp(ctk.CTk):
         for key, entry in self.entries.items():
             setattr(self, key, entry.get().strip())
         self.save_config()
+        self.update_texts()
+        self.update_appearance()
         messagebox.showinfo("Success", "Settings saved successfully!")
         self.settings_window.destroy()
 
@@ -222,40 +311,5 @@ class MainApp(ctk.CTk):
         os._exit(0)
 
     def get_translation(self, key):
-        translations = {
-            "en": {
-                "search_placeholder": "Search documents and images...",
-                "search_button": "Search",
-                "status_ready": "Ready",
-                "status_indexing": "Indexing files...",
-                "send_button": "Send",
-                "new_chat_button": "New Chat",
-                "document_dir": "Document Directory:",
-                "image_dir": "Image Directory:",
-                "search": "Search",
-                "chat": "Chat",
-                "open": "Open",
-                "summary": "Summary",
-                "index_folder": "Index Folders",
-                "dark_mode":  "Dark Mode",
-                "save": "Save",
-            },
-            "zh": {
-                "search_placeholder": "搜索文档和图像...",
-                "search_button": "搜索",
-                "status_ready": "准备就绪",
-                "status_indexing": "正在索引文件...",
-                "send_button": "发送",
-                "new_chat_button": "新聊天",
-                "document_dir": "文档目录:",
-                "image_dir": "图像目录：",
-                "search": "搜索",
-                "chat": "聊天",
-                "open": "打开",
-                "summary": "摘要",
-                "index_folder": "索引文件夹",
-                "dark_mode": "暗模式",
-                "save": "保存",
-            }
-        }
-        return translations[self.current_language.get().lower()].get(key, key)
+        lang = self.current_language.get().lower()
+        return self.translations.get(lang, {}).get(key, key)

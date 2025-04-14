@@ -4,7 +4,7 @@ import threading
 import base64
 import requests
 import numpy as np
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from customtkinter import CTkImage
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
@@ -17,7 +17,7 @@ class SearchFrame(ctk.CTkFrame):
     def __init__(self, master, index_file):
         super().__init__(master)
         self.master = master
-        self.index_file = index_file  # Use passed index_file path
+        self.index_file = index_file
         self.indexing_in_progress = False
         self.stop_indexing = threading.Event()
         self.load_index()
@@ -42,11 +42,11 @@ class SearchFrame(ctk.CTkFrame):
         self.search_entry.pack(side="left", expand=True, padx=5)
         self.search_entry.bind("<Return>", lambda e: self.perform_search())
         self.search_btn = ctk.CTkButton(
-            self.search_frame, text=self.master.get_translation("search_button"), command=self.perform_search
+            self.search_frame, text=self.master.get_translation("search_button"), command=self.perform_search, fg_color="#1f6aa8", hover_color="#14487f"
         )
         self.search_btn.pack(side="left", padx=5)
         self.index_btn = ctk.CTkButton(
-            self.search_frame, text=self.master.get_translation("index_folder"), command=self.select_folders_to_index
+            self.search_frame, text=self.master.get_translation("index_folder"), command=self.select_folders_to_index, fg_color="#1f6aa8", hover_color="#14487f"
         )
         self.index_btn.pack(side="left", padx=5)
 
@@ -65,7 +65,6 @@ class SearchFrame(ctk.CTkFrame):
         self.search_btn.configure(text=self.master.get_translation("search_button"))
         if not self.indexing_in_progress:
             self.status_var.set(self.master.get_translation("status_ready"))
-
 
     def load_index(self):
         self.index_data = {"text": {}, "images": {}}
@@ -240,8 +239,8 @@ class SearchFrame(ctk.CTkFrame):
             frame.pack(fill="x", pady=2)
             ctk.CTkLabel(frame, text=f"{os.path.basename(path)} ({score:.1%})").pack(side="left", padx=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(frame, text=self.master.get_translation("open"), width=50, command=lambda p=norm_path: self.open_file(p)).pack(side="right", padx=5)
-            ctk.CTkButton(frame, text=self.master.get_translation("summary"), width=70, command=lambda p=norm_path: self.show_summary(p)).pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("open"), width=50, command=lambda p=norm_path: self.open_file(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("summary"), width=70, command=lambda p=norm_path: self.show_summary(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="right", padx=5)
 
         row, col = 0, 0
         for path, score in image_results:
@@ -254,8 +253,8 @@ class SearchFrame(ctk.CTkFrame):
             btn_frame = ctk.CTkFrame(frame)
             btn_frame.pack(pady=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(btn_frame, text=self.master.get_translation("open"), width=70, command=lambda p=norm_path: self.open_file(p)).pack(side="left", padx=5)
-            ctk.CTkButton(btn_frame, text=self.master.get_translation("summary"), width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("open"), width=70, command=lambda p=norm_path: self.open_file(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("summary"), width=100, command=lambda p=norm_path: self.show_ocr_summary(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="left", padx=5)
             col = (col + 1) % 3
             row += 1 if col == 0 else 0
 
