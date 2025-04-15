@@ -1,4 +1,7 @@
 import json
+import socket
+
+device_name = socket.gethostname()
 
 def get_chat_payload(model, prompt, files=[]):
     """Generate the request payload based on the selected AI model."""
@@ -8,7 +11,7 @@ def get_chat_payload(model, prompt, files=[]):
             "query": prompt,
             "response_mode": "streaming",
             "conversation_id": "",
-            "user": "abc-123",
+            "user": f"{device_name}",
             "files": files
         }
     elif model == "ChatGPT":
