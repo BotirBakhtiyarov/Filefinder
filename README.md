@@ -30,9 +30,9 @@ Built with `customtkinter` for a modern GUI and `Flask` for a robust API backend
 
 *To be updated with v2’s Chinese interface.*
 
-- **Search Tab**: Browse files with Chinese queries.
-- **Chat Assistant**: Chat and summarize in Chinese.
-- **OCR Summary**: View extracted Chinese text summaries.
+- **Search Tab**: ![Search Tab](screenshots/1.PNG)
+- **Chat Assistant**: ![Chat Assistant](screenshots/2.PNG)
+- **OCR Summary**: ![OCR Summary](screenshots/3.PNG)
 
 ---
 
