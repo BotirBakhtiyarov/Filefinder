@@ -11,38 +11,35 @@ from .setup_wizard import SetupWizard
 class MainApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-        # Set base path and appdata path
-        if getattr(sys, 'frozen', False):  # Running as .exe
+
+        if getattr(sys, 'frozen', False):
             self.base_path = os.path.dirname(sys.executable)
-        else:  # Running as .py
+        else:
             self.base_path = os.path.dirname(os.path.abspath(__file__))
 
-        # Load translations
         translation_path = os.path.join(self.base_path, 'translations.json')
         try:
             with open(translation_path, 'r', encoding='utf-8') as f:
                 self.translations = json.load(f)
         except Exception as e:
-            messagebox.showerror("Error", f"Cannot load translations: {str(e)}")
+            messagebox.showerror("Error", f"Failed to load translations: {str(e)}")
             self.translations = {}
 
-        # Use APPDATA for writable storage
         appdata = os.getenv('APPDATA')
         self.appdata_path = os.path.join(appdata, "FileFinder")
         if not os.path.exists(self.appdata_path):
             os.makedirs(self.appdata_path)
 
-
         self.config_file = os.path.join(self.appdata_path, "config.json")
         self.index_file = os.path.join(self.appdata_path, "file_index.json")
 
-        self.title("工一智能文件查找器和聊天助手")
+        self.title("工一文件查找器和聊天助手")
         self.geometry("1200x800")
-        icon_path = os.path.join(self.base_path,'img', 'logo.ico')
+        icon_path = os.path.join(self.base_path, 'img', 'logo.ico')
         self.iconbitmap(icon_path)
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
 
-        self.current_language = ctk.StringVar(value="EN")
+        self.current_language = ctk.StringVar(value="ZH")
         self.dark_mode = ctk.BooleanVar(value=True)
         self.chat_models = ["Regular", "OpenAI", "DeepSeek", "Ollama"]
         self.chat_model = ctk.StringVar(value="Regular")
@@ -54,7 +51,6 @@ class MainApp(ctk.CTk):
         self.image_dir = ""
 
         if not os.path.exists(self.config_file):
-
             self.show_setup_wizard()
         else:
             self.load_config()
@@ -74,7 +70,7 @@ class MainApp(ctk.CTk):
         try:
             self.save_config()
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
+            messagebox.showerror("Error", f"保存配置失败: {str(e)}")
 
         self.api_url = config["api_url"]
         self.api_key = config["api_key"]
@@ -89,11 +85,10 @@ class MainApp(ctk.CTk):
         self.initialize_ui()
 
     def load_config(self):
-        # Define default configuration with all expected keys
         default_config = {
-            "api_url": "",
+            "api_url": "http://localhost:5000",
             "api_key": "",
-            "chat_api_url": "",
+            "chat_api_url": "http://10.20.1.213/v1/chat-messages",
             "chat_api_key": "",
             "document_dir": "",
             "image_dir": "",
@@ -103,26 +98,17 @@ class MainApp(ctk.CTk):
         }
 
         if not os.path.exists(self.config_file):
-            # If config file doesn't exist, use defaults
             self.config = default_config
-
         else:
-            # Load existing config file with error handling
             try:
                 with open(self.config_file, "r", encoding='utf-8') as f:
                     loaded_config = json.load(f)
-                # Merge default config with loaded config
                 self.config = {**default_config, **loaded_config}
-
             except json.JSONDecodeError:
-                # If file is corrupted, fall back to defaults
-
                 self.config = default_config
             except Exception as e:
-
                 self.config = default_config
 
-        # Assign config values to instance variables
         self.api_url = self.config["api_url"]
         self.api_key = self.config["api_key"]
         self.chat_api_url = self.config["chat_api_url"]
@@ -148,9 +134,7 @@ class MainApp(ctk.CTk):
         try:
             with open(self.config_file, "w", encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4)
-
         except Exception as e:
-
             raise
 
     def initialize_ui(self):
@@ -160,12 +144,10 @@ class MainApp(ctk.CTk):
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
-        # Sidebar
         self.sidebar = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.sidebar.grid(row=0, column=0, sticky="ns", padx=0, pady=0)
-        self.sidebar.grid_remove()  # Initially hidden
+        self.sidebar.grid_remove()
 
-        # Sidebar buttons
         ctk.CTkButton(self.sidebar, text=self.get_translation("🔍搜索"), command=lambda: self.switch_mode("search"),
                       fg_color="#1f6aa8", hover_color="#14487f").pack(pady=(50,10), padx=10, fill="x")
         ctk.CTkButton(self.sidebar, text=self.get_translation("💬聊天"), command=lambda: self.switch_mode("chat"),
@@ -173,16 +155,13 @@ class MainApp(ctk.CTk):
         ctk.CTkButton(self.sidebar, text=self.get_translation("🛠设置"), command=self.show_settings,
                       fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
 
-        # Content frame
         self.content_frame = ctk.CTkFrame(self, corner_radius=10)
         self.content_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
-        # Burger menu button
         self.burger_btn = ctk.CTkButton(self, text="☰", width=40, command=self.toggle_sidebar, fg_color="#1f6aa8",
                                         hover_color="#14487f")
         self.burger_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
 
-        # Initialize SearchFrame and ChatFrame with MainApp as master
         self.search_frame = SearchFrame(self, self.index_file)
         self.search_frame.place(in_=self.content_frame, x=0, y=0, relwidth=1, relheight=1)
         self.chat_frame = ChatFrame(self)
@@ -214,25 +193,22 @@ class MainApp(ctk.CTk):
         self.settings_window = ctk.CTkToplevel(self)
         self.settings_window.title(self.get_translation("settings"))
         self.settings_window.geometry("400x700")
-        self.settings_window.resizable(False, False)
+        self.settings_window.resizable(False, True)
         ico_path = os.path.join(self.base_path, 'img', 'logo.ico')
         self.settings_window.iconbitmap(ico_path)
 
+        # ctk.CTkLabel(self.settings_window, text="Language:").pack(pady=5)
+        # self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["ZH"],
+        #                                      variable=self.current_language)
+        # self.lang_option.pack(pady=5)
 
-        # Language selection
-        ctk.CTkLabel(self.settings_window, text="语言:").pack(pady=5)
-        self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["ZH"], #["EN", "ZH", "RU", "UZ"]
-                                             variable=self.current_language)
-        self.lang_option.pack(pady=5)
-
-        # Chat AI model selection
         ctk.CTkLabel(self.settings_window, text="聊天AI模型:").pack(pady=5)
         self.chat_model_option = ctk.CTkOptionMenu(self.settings_window, values=self.chat_models,
                                                    variable=self.chat_model)
         self.chat_model_option.pack(pady=5)
 
         fields = [
-            ("API URL (Embedding)", "api_url"), ("API Key (Embedding)", "api_key"),
+            ("Embedding API URL", "api_url"), ("Embedding API Key", "api_key"),
             ("Chat API URL", "chat_api_url"), ("Chat API Key", "chat_api_key")
         ]
         self.entries = {}
@@ -292,12 +268,12 @@ class MainApp(ctk.CTk):
     def quit_app(self):
         self.is_quitting = True
         self.hotkey_listener.stop()
-        self.search_frame.stop_continuous_indexing()
+        if hasattr(self, 'search_frame'):
+            self.search_frame.stop_continuous_indexing()
         self.save_config()
         self.destroy()
         os._exit(0)
 
     def get_translation(self, key):
         lang = self.current_language.get().lower()
-        return self.translations.get(lang, {}).get(key, key)
         return self.translations.get(lang, {}).get(key, key)

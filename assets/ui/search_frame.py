@@ -203,7 +203,7 @@ class SearchFrame(ctk.CTkFrame):
             return
         for widget in self.text_scroll.winfo_children() + self.image_scroll.winfo_children():
             widget.destroy()
-        self.status_var.set("Searching...")
+        self.status_var.set("搜索。。。")
         self.progress_bar.start()
         threading.Thread(target=self.run_search, args=(query,), daemon=True).start()
 
@@ -276,9 +276,9 @@ class SearchFrame(ctk.CTkFrame):
             if os.path.exists(path):
                 os.startfile(path)
             else:
-                messagebox.showerror("Error", f"File not found: {path}")
+                messagebox.showerror("Error", f"找不到文件： {path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to open file: {str(e)}")
+            messagebox.showerror("Error", f"打开文件失败： {str(e)}")
 
     def show_summary(self, file_path):
         SummaryWindow(self, file_path)
