@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 file_index.json
 config.json
+/.idea
