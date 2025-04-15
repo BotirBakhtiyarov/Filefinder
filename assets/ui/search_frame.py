@@ -27,10 +27,10 @@ class SearchFrame(ctk.CTkFrame):
     def create_widgets(self):
         self.notebook = ctk.CTkTabview(self)
         self.notebook.pack(expand=True, fill="both", padx=10, pady=5)
-        self.text_tab = self.notebook.add("Documents")
+        self.text_tab = self.notebook.add("文件")
         self.text_scroll = ctk.CTkScrollableFrame(self.text_tab)
         self.text_scroll.pack(expand=True, fill="both")
-        self.image_tab = self.notebook.add("Images")
+        self.image_tab = self.notebook.add("图像")
         self.image_scroll = ctk.CTkScrollableFrame(self.image_tab)
         self.image_scroll.pack(expand=True, fill="both")
 
@@ -67,28 +67,38 @@ class SearchFrame(ctk.CTkFrame):
             self.status_var.set(self.master.get_translation("status_ready"))
 
     def load_index(self):
-        self.index_data = {"text": {}, "images": {}}
+        default_index = {"text": {}, "images": {}}
+        self.index_data = default_index
         if not os.path.exists(self.index_file):
-            with open(self.index_file, "w", encoding="utf-8") as f:
-                json.dump(self.index_data, f)
+
+            self.save_index()
         else:
-            with open(self.index_file, "r", encoding="utf-8") as f:
-                self.index_data = json.load(f)
+            try:
+                with open(self.index_file, "r", encoding="utf-8") as f:
+                    self.index_data = json.load(f)
+
+            except json.JSONDecodeError:
+
+                self.index_data = default_index
+            except Exception as e:
+
+                self.index_data = default_index
 
     def save_index(self):
         with open(self.index_file, "w", encoding="utf-8") as f:
-            json.dump(self.index_data, f)
+            json.dump(self.index_data, f, indent=4)
+
 
     def select_folders_to_index(self):
         folders = []
         while True:
-            folder = filedialog.askdirectory(title="Select Folder to Index")
+            folder = filedialog.askdirectory(title="选择要索引的文件夹")
             if not folder:
                 break
             if folder not in folders:
                 folders.append(folder)
         if folders:
-            self.status_var.set("Indexing selected folders...")
+            self.status_var.set("正在为所选文件夹建立索引。。。")
             self.progress_bar.start()
             threading.Thread(target=self.index_selected_folders, args=(folders,), daemon=True).start()
 

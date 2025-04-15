@@ -7,10 +7,6 @@ from pynput import keyboard
 from .search_frame import SearchFrame
 from .chat_frame import ChatFrame
 from .setup_wizard import SetupWizard
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class MainApp(ctk.CTk):
     def __init__(self):
@@ -26,9 +22,7 @@ class MainApp(ctk.CTk):
         try:
             with open(translation_path, 'r', encoding='utf-8') as f:
                 self.translations = json.load(f)
-            logging.debug("Translations loaded successfully")
         except Exception as e:
-            logging.error(f"Failed to load translations: {str(e)}")
             messagebox.showerror("Error", f"Cannot load translations: {str(e)}")
             self.translations = {}
 
@@ -37,13 +31,15 @@ class MainApp(ctk.CTk):
         self.appdata_path = os.path.join(appdata, "FileFinder")
         if not os.path.exists(self.appdata_path):
             os.makedirs(self.appdata_path)
-            logging.debug(f"Created appdata directory: {self.appdata_path}")
+
 
         self.config_file = os.path.join(self.appdata_path, "config.json")
         self.index_file = os.path.join(self.appdata_path, "file_index.json")
 
-        self.title("Smart File Finder & Chat Assistant v2")
+        self.title("工一智能文件查找器和聊天助手")
         self.geometry("1200x800")
+        icon_path = os.path.join(self.base_path,'img', 'logo.ico')
+        self.iconbitmap(icon_path)
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
 
         self.current_language = ctk.StringVar(value="EN")
@@ -58,7 +54,7 @@ class MainApp(ctk.CTk):
         self.image_dir = ""
 
         if not os.path.exists(self.config_file):
-            logging.debug("Config file not found, showing setup wizard")
+
             self.show_setup_wizard()
         else:
             self.load_config()
@@ -74,14 +70,12 @@ class MainApp(ctk.CTk):
         self.wizard.grab_set()
 
     def on_wizard_complete(self, config):
-        logging.debug(f"Received config from wizard: {config}")
         self.config = config
         try:
             self.save_config()
-            logging.debug("Config saved in on_wizard_complete")
         except Exception as e:
-            logging.error(f"Failed to save config: {str(e)}")
             messagebox.showerror("Error", f"Failed to save configuration: {str(e)}")
+
         self.api_url = config["api_url"]
         self.api_key = config["api_key"]
         self.chat_api_url = config["chat_api_url"]
@@ -103,40 +97,30 @@ class MainApp(ctk.CTk):
             "chat_api_key": "",
             "document_dir": "",
             "image_dir": "",
-            "language": "EN",
+            "language": "ZH",
             "chat_model": "Regular",
             "dark_mode": True
         }
 
         if not os.path.exists(self.config_file):
-            # If config file doesn't exist, use defaults and save them
+            # If config file doesn't exist, use defaults
             self.config = default_config
-            try:
-                with open(self.config_file, "w") as f:
-                    json.dump(self.config, f, indent=4)
-                logging.debug(f"Created new config file with defaults: {self.config_file}")
-            except Exception as e:
-                logging.error(f"Failed to create config file: {str(e)}")
+
         else:
             # Load existing config file with error handling
             try:
-                with open(self.config_file, "r") as f:
+                with open(self.config_file, "r", encoding='utf-8') as f:
                     loaded_config = json.load(f)
                 # Merge default config with loaded config
                 self.config = {**default_config, **loaded_config}
-                logging.debug(f"Loaded config: {self.config}")
+
             except json.JSONDecodeError:
                 # If file is corrupted, fall back to defaults
-                logging.warning("Config file is corrupted. Using default config.")
-                self.config = default_config
 
-            # Save the updated config back to the file
-            try:
-                with open(self.config_file, "w") as f:
-                    json.dump(self.config, f, indent=4)
-                logging.debug("Updated config file with merged config")
+                self.config = default_config
             except Exception as e:
-                logging.error(f"Failed to update config file: {str(e)}")
+
+                self.config = default_config
 
         # Assign config values to instance variables
         self.api_url = self.config["api_url"]
@@ -162,11 +146,11 @@ class MainApp(ctk.CTk):
             "dark_mode": self.dark_mode.get()
         }
         try:
-            with open(self.config_file, "w") as f:
+            with open(self.config_file, "w", encoding='utf-8') as f:
                 json.dump(self.config, f, indent=4)
-            logging.debug(f"Saved config to {self.config_file}: {self.config}")
+
         except Exception as e:
-            logging.error(f"Failed to save config to {self.config_file}: {str(e)}")
+
             raise
 
     def initialize_ui(self):
@@ -182,11 +166,11 @@ class MainApp(ctk.CTk):
         self.sidebar.grid_remove()  # Initially hidden
 
         # Sidebar buttons
-        ctk.CTkButton(self.sidebar, text=self.get_translation("search"), command=lambda: self.switch_mode("search"),
-                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=(40,10), padx=10, fill="x")
-        ctk.CTkButton(self.sidebar, text=self.get_translation("chat"), command=lambda: self.switch_mode("chat"),
+        ctk.CTkButton(self.sidebar, text=self.get_translation("🔍搜索"), command=lambda: self.switch_mode("search"),
+                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=(50,10), padx=10, fill="x")
+        ctk.CTkButton(self.sidebar, text=self.get_translation("💬聊天"), command=lambda: self.switch_mode("chat"),
                       fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
-        ctk.CTkButton(self.sidebar, text=self.get_translation("settings"), command=self.show_settings,
+        ctk.CTkButton(self.sidebar, text=self.get_translation("🛠设置"), command=self.show_settings,
                       fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
 
         # Content frame
@@ -229,17 +213,20 @@ class MainApp(ctk.CTk):
             return
         self.settings_window = ctk.CTkToplevel(self)
         self.settings_window.title(self.get_translation("settings"))
-        self.settings_window.geometry("400x600")
+        self.settings_window.geometry("400x700")
         self.settings_window.resizable(False, False)
+        ico_path = os.path.join(self.base_path, 'img', 'logo.ico')
+        self.settings_window.iconbitmap(ico_path)
+
 
         # Language selection
-        ctk.CTkLabel(self.settings_window, text="Language:").pack(pady=5)
-        self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["EN", "ZH", "RU", "UZ"],
+        ctk.CTkLabel(self.settings_window, text="语言:").pack(pady=5)
+        self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["ZH"], #["EN", "ZH", "RU", "UZ"]
                                              variable=self.current_language)
         self.lang_option.pack(pady=5)
 
         # Chat AI model selection
-        ctk.CTkLabel(self.settings_window, text="Chat AI Model:").pack(pady=5)
+        ctk.CTkLabel(self.settings_window, text="聊天AI模型:").pack(pady=5)
         self.chat_model_option = ctk.CTkOptionMenu(self.settings_window, values=self.chat_models,
                                                    variable=self.chat_model)
         self.chat_model_option.pack(pady=5)
@@ -287,7 +274,7 @@ class MainApp(ctk.CTk):
         self.save_config()
         self.update_texts()
         self.update_appearance()
-        messagebox.showinfo("Success", "Settings saved successfully!")
+        messagebox.showinfo("Success", "设置已成功保存!")
         self.settings_window.destroy()
 
     def update_appearance(self):
@@ -312,4 +299,5 @@ class MainApp(ctk.CTk):
 
     def get_translation(self, key):
         lang = self.current_language.get().lower()
+        return self.translations.get(lang, {}).get(key, key)
         return self.translations.get(lang, {}).get(key, key)
