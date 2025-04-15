@@ -206,4 +206,4 @@ MIT License – see [LICENSE](https://github.com/BotirBakhtiyarov/Filefinder/blo
 ---
 
 **Built with ❤️ for Chinese-speaking users, Smart File Finder & Chat Assistant v2 is your ultimate file management companion!**
-```
+
