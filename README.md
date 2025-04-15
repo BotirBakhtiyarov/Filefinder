@@ -1,184 +1,209 @@
-# FileFinder
+# Smart File Finder & Chat Assistant v2 🇨🇳📂
 
-![Python](https://img.shields.io/badge/Python-3.10-blue)
+[![GitHub stars](https://img.shields.io/github/stars/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/network/members)
+[![GitHub license](https://img.shields.io/github/license/BotirBakhtiyarov/Filefinder)](https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE)
+[![Python version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-**Smart File Finder & Chat Assistant** is a Python-based desktop application designed to help users efficiently search, manage, and summarize documents and images. Leveraging advanced AI capabilities, including text and image embeddings, OCR (Optical Character Recognition), and natural language processing, this tool provides a seamless experience for organizing and retrieving information from files stored locally or on network drives.
+**Smart File Finder & Chat Assistant v2** is a powerful Python-based desktop application designed to streamline file management and information retrieval for Chinese-speaking users. With a sleek, Chinese-localized interface, this tool leverages advanced AI to search, summarize, and interact with documents and images.
 
-Built with `customtkinter` for a modern GUI, `Flask` for the API backend, and integrated AI models like SentenceTransformers and ChineseCLIP, FileFinder is a powerful utility for professionals, researchers, and anyone dealing with large collections of files.
-
----
-
-## Features
-
-- **File Search**: Search documents (DOCX, XLSX, PPTX, PDF, TXT) and images (JPG, PNG, GIF, BMP) using natural language queries.
-- **AI-Powered Embeddings**: Uses text and image embeddings for semantic search, powered by SentenceTransformers and ChineseCLIP.
-- **OCR Integration**: Extracts text from images and PDFs with embedded images using Tesseract OCR via an API.
-- **Summarization**: Generates AI-driven summaries of documents and OCR-extracted text from images using a chat API.
-- **Multi-Language Support**: Supports English and Chinese (ZH) interfaces.
-- **Dark/Light Mode**: Toggle between dark and light themes for a comfortable user experience.
-- **System Tray**: Minimizes to the system tray with hotkey support (`Alt+Q`) to restore the window.
-- **Continuous Indexing**: Automatically updates the file index in the background to reflect changes in monitored directories.
+Built with `customtkinter` for a modern GUI and `Flask` for a robust API backend, it’s perfect for professionals, researchers, and teams handling large file collections in Chinese environments. 🚀
 
 ---
 
-## Screenshots
+## ✨ Features
 
-*(Add screenshots here once you have them, e.g., search interface, chat window, summary popup)*
-
-- Search Tab: ![Search Tab](screenshots/2.PNG)
-- Chat Assistant: ![Chat Assistant](screenshots/4.PNG)
-- OCR Summary: ![OCR Summary](screenshots/3.PNG)
+- **Semantic File Search 🔍**: Find documents (DOCX, PDF, TXT) and images (JPG, PNG) using natural language queries in Chinese.
+- **AI-Driven Insights 🤖**: Generate embeddings for text and images with models optimized for Chinese content, powered by SentenceTransformers and ChineseCLIP.
+- **OCR Excellence 📸**: Extract and summarize text from images and PDFs using Tesseract OCR, tailored for Chinese characters.
+- **Smart Chat Assistant 💬**: Engage in contextual conversations or summarize files with a Chinese-focused AI, supporting both Normal and RAG modes.
+- **Chinese Interface 🇨🇳**: Fully localized UI with intuitive navigation, designed for native Chinese speakers.
+- **Dark/Light Mode 🌗**: Toggle themes for comfortable use in any lighting.
+- **System Tray Integration 🖥️**: Minimize to tray with `Alt+Q` hotkey to restore.
+- **Continuous Indexing 🔄**: Automatically updates file indexes for monitored directories.
 
 ---
 
-## Installation
+## 📸 Screenshots
+
+*To be updated with v2’s Chinese interface.*
+
+- **Search Tab**: Browse files with Chinese queries.
+- **Chat Assistant**: Chat and summarize in Chinese.
+- **OCR Summary**: View extracted Chinese text summaries.
+
+---
+
+## 🚀 Installation
 
 ### Prerequisites
 
-- **Python**: 3.8 or higher
-- **Tesseract OCR**: Required for OCR functionality
-  - Windows: [Download](https://github.com/UB-Mannheim/tesseract/wiki) and add to PATH
-  - Linux: `sudo apt install tesseract-ocr`
-  - macOS: `brew install tesseract`
-- **Poppler**: Required for PDF-to-image conversion
-  - Windows: [Download](https://github.com/oschwartz10612/poppler-windows) and add to PATH
-  - Linux: `sudo apt install poppler-utils`
-  - macOS: `brew install poppler`
+- **Python 🐍**: 3.10 or higher
+- **Tesseract OCR 📖**: For Chinese text extraction  
+  - **Windows**: Download, add to PATH, ensure `chi_sim` data is installed  
+  - **Linux**: `sudo apt install tesseract-ocr tesseract-ocr-chi-sim`  
+  - **macOS**: `brew install tesseract`
+- **Poppler 📄**: For PDF processing  
+  - **Windows**: Download, add to PATH  
+  - **Linux**: `sudo apt install poppler-utils`  
+  - **macOS**: `brew install poppler`
 
-### Setup
+### Setup Steps
 
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/BotirBakhtiyarov/Filefinder.git
-   cd Filefinder
-   ```
+```bash
+# Clone the Repository 📥
+git clone https://github.com/BotirBakhtiyarov/Filefinder.git
+cd Filefinder
 
-2. **Create a Virtual Environment**:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # Linux/macOS
-   .venv\Scripts\activate     # Windows
-   ```
+# Set Up Virtual Environment 🛠️
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+.venv\Scripts\activate     # Windows
 
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+# Install Dependencies 📦
+pip install -r requirements.txt
+```
 
-4. **Configure Models**:
-   - Update the `MODEL_DIR` path in `api_server.py` to point to your local model directory:
-     ```python
-     MODEL_DIR = "models/"  # Adjust this path
-     ```
-   - Ensure the models (`paraphrase-multilingual-MiniLM-L12-v2` and `chinese-clip-vit-base-patch16`) are available in that directory or downloaded automatically by the libraries.
+### Configure AI Models ⚙️
 
-5. **Run the API Server**:
-   ```bash
-   python api_server.py
-   ```
+Update `MODEL_DIR` in `api_server.py`:
 
-6. **Run the Application**:
-   ```bash
-   python app.py
-   ```
+```python
+MODEL_DIR = "models/"  # Path to Chinese-optimized models
+```
 
----
+Make sure models like:
 
-## Usage
+- `paraphrase-multilingual-MiniLM-L12-v2`
+- `chinese-clip-vit-base-patch16`
 
-1. **Initial Setup**:
-   - On first launch, a setup wizard will prompt you to configure:
-     - API URL and Key (for embeddings)
-     - Chat API URL and Key (for summarization)
-     - Document and Image directories to monitor
-     - Language (EN/ZH) and theme (Dark/Light)
+are available or downloaded.
 
-2. **Search Files**:
-   - Go to the "Search" tab.
-   - Enter a query (e.g., "annual report summary").
-   - View results for documents and images with options to:
-     - **Open**: Opens the file in the default application.
-     - **Summary**: Displays an AI-generated summary (documents only).
-     - **OCR Summary**: Extracts text from images and summarizes it.
+### Launch the App
 
-3. **Chat Assistant**:
-   - Switch to the "Chat" tab.
-   - Ask questions or request summaries directly via the chat interface.
+```bash
+# Start the API server 🌐
+python api_server.py
 
-4. **Minimize to Tray**:
-   - Close the window to minimize to the system tray.
-   - Press `Alt+Q` to restore the window.
+# Run the main application 🎉
+python app.py
+```
 
 ---
 
-## Project Structure
+## 🖱️ Usage
+
+### First Launch 🚀
+
+A Chinese-language setup wizard will guide you to:
+
+- Enter API keys/URLs
+- Set document/image directories
+- Choose theme (Dark/Light)
+
+### Search Files 🔎
+
+- Go to the **“搜索”** tab.
+- Enter Chinese queries (e.g., `年度报告概述`).
+- View results and:
+  - **打开**: Open file
+  - **摘要**: AI-generated summary
+  - **OCR 摘要**: OCR-based summary for images
+
+### Chat Assistant 💬
+
+- Go to the **“聊天”** tab
+- Select:
+  - **Normal Mode**: For general chat
+  - **RAG Mode**: Upload and ask about specific files
+- Ask questions in Chinese and get summarized answers
+
+### System Tray 🖥️
+
+- Minimize to tray by closing window
+- Press **Alt+Q** to restore
+
+---
+
+## 📁 Project Structure
 
 ```
-FileFinder_final/
+FileFinder_v2/
 ├── .venv/              # Virtual environment
 ├── assets/
-│   ├── ui/             # GUI components
+│   ├── ui/             # Chinese-localized GUI
 │   │   ├── chat_frame.py
 │   │   ├── main_app.py
 │   │   ├── search_frame.py
 │   │   ├── setup_wizard.py
 │   │   └── summary_window.py
 │   └── utils/
-│       └── file_utils.py  # File handling utilities
-├── app.py             # Main application entry point
-├── api_server.py      # Flask API server for embeddings and OCR
-├── requirements.txt   # Python dependencies
-└── myicon.ico         # Application icon
+│       └── file_utils.py
+├── app.py              # App entry point
+├── api_server.py       # Flask backend
+├── requirements.txt    # Dependencies
+└── myicon.ico          # App icon
 ```
 
 ---
 
-## API Endpoints
+## 🌐 API Endpoints
 
-The `api_server.py` provides the following endpoints:
+`api_server.py` includes:
 
-- **`/embed_text`**: Embeds text for semantic search.
-- **`/embed_image`**: Embeds images for search.
-- **`/embed_clip_text`**: Embeds text for CLIP-based image search.
-- **`/extract_pdf_with_ocr`**: Extracts text from PDFs (including images) using OCR.
-- **`/extract_image_ocr`**: Extracts text from individual images using OCR.
-
----
-
-## Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository.
-2. Create a feature branch (`git checkout -b feature/YourFeature`).
-3. Commit your changes (`git commit -m "Add YourFeature"`).
-4. Push to the branch (`git push origin feature/YourFeature`).
-5. Open a Pull Request.
-
-Please ensure your code follows PEP 8 style guidelines and includes appropriate tests.
+- `/embed_text`: Embed Chinese text
+- `/embed_image`: Embed image
+- `/embed_clip_text`: CLIP-based text-image embedding
+- `/extract_pdf_with_ocr`: OCR for Chinese PDFs
+- `/extract_image_ocr`: OCR for Chinese images
 
 ---
 
-## Troubleshooting
+## 🤝 Contributing
 
-- **FileNotFoundError**: Ensure file paths are correct and accessible. Network drives must be mapped or properly resolved.
-- **UnicodeDecodeError**: The app handles multiple encodings (UTF-8, UTF-16, Latin-1) for TXT files. Add more encodings in `file_utils.py` if needed.
-- **OCR Issues**: Verify Tesseract and Poppler are installed and in your system PATH.
-- **API Errors**: Check that `api_server.py` is running and the API URL/key are correctly configured in the app.
+We welcome contributions! 🌟
+
+```bash
+# Fork and branch
+git checkout -b feature/YourFeature
+
+# Commit and push
+git commit -m "Add YourFeature"
+git push origin feature/YourFeature
+```
+
+- Follow PEP 8
+- Maintain Chinese localization
 
 ---
 
-## License
+## ⚠️ Troubleshooting
 
-MIT License - see [LICENSE](LICENSE) for details.
+- **File Access Errors**: Verify file paths and network drives.
+- **OCR Issues**: Make sure Tesseract is installed with `chi_sim` support.
+- **API Failures**: Confirm `api_server.py` is running and keys are set.
+- **UI Bugs**: Check `customtkinter` compatibility.
+
+Open an [issue on GitHub](https://github.com/BotirBakhtiyarov/Filefinder/issues) with logs if needed.
 
 ---
 
-## Acknowledgments
+## 📜 License
 
-- [CustomTkinter](https://github.com/TomSchimansky/CustomTkinter) for the modern GUI framework.
-- [SentenceTransformers](https://github.com/UKPLab/sentence-transformers) for text embeddings.
-- [Transformers](https://github.com/huggingface/transformers) for CLIP models.
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) for text extraction.
+MIT License – see [LICENSE](https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE) for details.
+
+---
+
+## 🙌 Acknowledgments
+
+- **CustomTkinter**: Modern GUI framework
+- **SentenceTransformers**: Chinese text embeddings
+- **Transformers**: ChineseCLIP integration
+- **Tesseract OCR**: Robust OCR engine
+
+---
+
+**Built with ❤️ for Chinese-speaking users, Smart File Finder & Chat Assistant v2 is your ultimate file management companion!**
+```
