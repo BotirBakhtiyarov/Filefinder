@@ -7,14 +7,13 @@
 ![Flask](https://img.shields.io/badge/Flask-3.0.0-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-## Installation
-Download `FileFinderSetup.exe` from [Releases](https://github.com/BotirBakhtiyarov/FileFinder/releases).
-
 **Smart File Finder & Chat Assistant v2** is a powerful Python-based desktop application designed to streamline file management and information retrieval for Chinese-speaking users. With a sleek, Chinese-localized interface, this tool leverages advanced AI to search, summarize, and interact with documents and images.
 
 Built with `customtkinter` for a modern GUI and `Flask` for a robust API backend, it’s perfect for professionals, researchers, and teams handling large file collections in Chinese environments. 🚀
 
 ---
+## Install Setup File
+Download `FileFinderSetup.exe` from [Releases](https://github.com/BotirBakhtiyarov/FileFinder/releases).
 
 ## ✨ Features
 
