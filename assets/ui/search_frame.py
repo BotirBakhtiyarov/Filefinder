@@ -4,7 +4,7 @@ import threading
 import base64
 import requests
 import numpy as np
-from tkinter import filedialog
+from tkinter import filedialog, messagebox
 from customtkinter import CTkImage
 from sklearn.metrics.pairwise import cosine_similarity
 from PIL import Image
@@ -17,7 +17,7 @@ class SearchFrame(ctk.CTkFrame):
     def __init__(self, master, index_file):
         super().__init__(master)
         self.master = master
-        self.index_file = index_file  # Use passed index_file path
+        self.index_file = index_file
         self.indexing_in_progress = False
         self.stop_indexing = threading.Event()
         self.load_index()
@@ -27,10 +27,10 @@ class SearchFrame(ctk.CTkFrame):
     def create_widgets(self):
         self.notebook = ctk.CTkTabview(self)
         self.notebook.pack(expand=True, fill="both", padx=10, pady=5)
-        self.text_tab = self.notebook.add("Documents")
+        self.text_tab = self.notebook.add("文件")
         self.text_scroll = ctk.CTkScrollableFrame(self.text_tab)
         self.text_scroll.pack(expand=True, fill="both")
-        self.image_tab = self.notebook.add("Images")
+        self.image_tab = self.notebook.add("图像")
         self.image_scroll = ctk.CTkScrollableFrame(self.image_tab)
         self.image_scroll.pack(expand=True, fill="both")
 
@@ -42,11 +42,11 @@ class SearchFrame(ctk.CTkFrame):
         self.search_entry.pack(side="left", expand=True, padx=5)
         self.search_entry.bind("<Return>", lambda e: self.perform_search())
         self.search_btn = ctk.CTkButton(
-            self.search_frame, text=self.master.get_translation("search_button"), command=self.perform_search
+            self.search_frame, text=self.master.get_translation("search_button"), command=self.perform_search, fg_color="#1f6aa8", hover_color="#14487f"
         )
         self.search_btn.pack(side="left", padx=5)
         self.index_btn = ctk.CTkButton(
-            self.search_frame, text=self.master.get_translation("index_folder"), command=self.select_folders_to_index
+            self.search_frame, text=self.master.get_translation("index_folder"), command=self.select_folders_to_index, fg_color="#1f6aa8", hover_color="#14487f"
         )
         self.index_btn.pack(side="left", padx=5)
 
@@ -66,30 +66,39 @@ class SearchFrame(ctk.CTkFrame):
         if not self.indexing_in_progress:
             self.status_var.set(self.master.get_translation("status_ready"))
 
-
     def load_index(self):
-        self.index_data = {"text": {}, "images": {}}
+        default_index = {"text": {}, "images": {}}
+        self.index_data = default_index
         if not os.path.exists(self.index_file):
-            with open(self.index_file, "w", encoding="utf-8") as f:
-                json.dump(self.index_data, f)
+
+            self.save_index()
         else:
-            with open(self.index_file, "r", encoding="utf-8") as f:
-                self.index_data = json.load(f)
+            try:
+                with open(self.index_file, "r", encoding="utf-8") as f:
+                    self.index_data = json.load(f)
+
+            except json.JSONDecodeError:
+
+                self.index_data = default_index
+            except Exception as e:
+
+                self.index_data = default_index
 
     def save_index(self):
         with open(self.index_file, "w", encoding="utf-8") as f:
-            json.dump(self.index_data, f)
+            json.dump(self.index_data, f, indent=4)
+
 
     def select_folders_to_index(self):
         folders = []
         while True:
-            folder = filedialog.askdirectory(title="Select Folder to Index")
+            folder = filedialog.askdirectory(title="选择要索引的文件夹")
             if not folder:
                 break
             if folder not in folders:
                 folders.append(folder)
         if folders:
-            self.status_var.set("Indexing selected folders...")
+            self.status_var.set("正在为所选文件夹建立索引。。。")
             self.progress_bar.start()
             threading.Thread(target=self.index_selected_folders, args=(folders,), daemon=True).start()
 
@@ -194,7 +203,7 @@ class SearchFrame(ctk.CTkFrame):
             return
         for widget in self.text_scroll.winfo_children() + self.image_scroll.winfo_children():
             widget.destroy()
-        self.status_var.set("Searching...")
+        self.status_var.set("搜索。。。")
         self.progress_bar.start()
         threading.Thread(target=self.run_search, args=(query,), daemon=True).start()
 
@@ -240,8 +249,8 @@ class SearchFrame(ctk.CTkFrame):
             frame.pack(fill="x", pady=2)
             ctk.CTkLabel(frame, text=f"{os.path.basename(path)} ({score:.1%})").pack(side="left", padx=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(frame, text=self.master.get_translation("open"), width=50, command=lambda p=norm_path: self.open_file(p)).pack(side="right", padx=5)
-            ctk.CTkButton(frame, text=self.master.get_translation("summary"), width=70, command=lambda p=norm_path: self.show_summary(p)).pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("open"), width=50, command=lambda p=norm_path: self.open_file(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="right", padx=5)
+            ctk.CTkButton(frame, text=self.master.get_translation("summary"), width=70, command=lambda p=norm_path: self.show_summary(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="right", padx=5)
 
         row, col = 0, 0
         for path, score in image_results:
@@ -254,8 +263,8 @@ class SearchFrame(ctk.CTkFrame):
             btn_frame = ctk.CTkFrame(frame)
             btn_frame.pack(pady=5)
             norm_path = os.path.normpath(path)
-            ctk.CTkButton(btn_frame, text=self.master.get_translation("open"), width=70, command=lambda p=norm_path: self.open_file(p)).pack(side="left", padx=5)
-            ctk.CTkButton(btn_frame, text=self.master.get_translation("summary"), width=100, command=lambda p=norm_path: self.show_ocr_summary(p)).pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("open"), width=70, command=lambda p=norm_path: self.open_file(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="left", padx=5)
+            ctk.CTkButton(btn_frame, text=self.master.get_translation("summary"), width=100, command=lambda p=norm_path: self.show_ocr_summary(p), fg_color="#1f6aa8", hover_color="#14487f").pack(side="left", padx=5)
             col = (col + 1) % 3
             row += 1 if col == 0 else 0
 
@@ -267,9 +276,9 @@ class SearchFrame(ctk.CTkFrame):
             if os.path.exists(path):
                 os.startfile(path)
             else:
-                messagebox.showerror("Error", f"File not found: {path}")
+                messagebox.showerror("Error", f"找不到文件： {path}")
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to open file: {str(e)}")
+            messagebox.showerror("Error", f"打开文件失败： {str(e)}")
 
     def show_summary(self, file_path):
         SummaryWindow(self, file_path)
