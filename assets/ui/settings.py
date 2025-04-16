@@ -2,6 +2,7 @@ import os
 import customtkinter as ctk
 from tkinter import messagebox
 import json
+import sys
 
 class SettingsWindow(ctk.CTkToplevel):
     def __init__(self, master):
@@ -10,8 +11,11 @@ class SettingsWindow(ctk.CTkToplevel):
         self.title(self.master.get_translation("settings"))
         self.geometry("400x700")
         self.resizable(False, True)
-        ico_path = os.path.join(self.master.base_path, 'img', 'logo.ico')
-        self.iconbitmap(ico_path)
+        icon_path = os.path.join(self.master.base_path, 'img', 'logo.ico')
+        try:
+            self.iconbitmap(icon_path)
+        except Exception as e:
+            messagebox.showwarning("警告", f"无法加载图标: {str(e)}")
 
         self.entries = {}
         self.create_widgets()

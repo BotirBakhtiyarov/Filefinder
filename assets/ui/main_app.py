@@ -8,24 +8,51 @@ from .search_frame import SearchFrame
 from .chat_frame import ChatFrame
 from .setup_wizard import SetupWizard
 from .settings import SettingsWindow
+from pathlib import Path
+
+local_path = str(Path(__file__).parent.resolve())
 
 class MainApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
+        # Set base path for resources
         if getattr(sys, 'frozen', False):
-            self.base_path = os.path.dirname(sys.executable)
+            self.base_path = sys._MEIPASS  # Use temporary directory for bundled files
         else:
             self.base_path = os.path.dirname(os.path.abspath(__file__))
 
+        # Load translations
         translation_path = os.path.join(self.base_path, 'translations.json')
+        default_translations = {
+            "zh": {
+                "search_placeholder": "搜索文档和图像...",
+                "search_button": "搜索",
+                "status_ready": "准备就绪",
+                "status_indexing": "正在索引文件...",
+                "send_button": "发送",
+                "new_chat_button": "新聊天",
+                "document_dir": "文档目录:",
+                "image_dir": "图像目录：",
+                "search": "搜索",
+                "chat": "聊天",
+                "open": "打开",
+                "summary": "摘要",
+                "index_folder": "索引文件夹",
+                "dark_mode": "暗模式",
+                "save": "保存",
+                "settings": "设置",
+                "upload_files": "上传文件"
+            }
+        }
         try:
             with open(translation_path, 'r', encoding='utf-8') as f:
                 self.translations = json.load(f)
-        except Exception as e:
-            messagebox.showerror("错误", f"加载翻译文件失败: {str(e)}")
-            self.translations = {}
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            messagebox.showwarning("警告", f"无法加载翻译文件，使用默认中文翻译: {str(e)}")
+            self.translations = default_translations
 
+        # Set up appdata directory
         appdata = os.getenv('APPDATA')
         self.appdata_path = os.path.join(appdata, "FileFinder")
         if not os.path.exists(self.appdata_path):
@@ -34,12 +61,17 @@ class MainApp(ctk.CTk):
         self.config_file = os.path.join(self.appdata_path, "config.json")
         self.index_file = os.path.join(self.appdata_path, "file_index.json")
 
+        # Window setup
         self.title("工一文件查找器和聊天助手")
         self.geometry("1200x800")
-        icon_path = os.path.join(self.base_path, 'img', 'logo.ico')
-        self.iconbitmap(icon_path)
+        icon_path = os.path.join(local_path, 'img', 'logo.ico')
+        try:
+            self.iconbitmap(icon_path)
+        except Exception as e:
+            messagebox.showwarning("警告", f"无法加载图标: {str(e)}")
         self.protocol("WM_DELETE_WINDOW", self.minimize_to_tray)
 
+        # Initialize variables
         self.current_language = ctk.StringVar(value="ZH")
         self.dark_mode = ctk.BooleanVar(value=True)
         self.chat_models = ["Regular", "OpenAI", "DeepSeek", "Ollama"]
