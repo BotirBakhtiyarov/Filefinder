@@ -25,9 +25,6 @@ class SetupWizard(ctk.CTkToplevel):
         ctk.CTkLabel(self, text="设置配置", font=("Arial", 16)).pack(pady=10)
 
         self.lang_var = ctk.StringVar(value="ZH")
-        # ctk.CTkLabel(self, text="语言：").pack(pady=5)
-        # self.lang_option = ctk.CTkOptionMenu(self, values=["ZH"], variable=self.lang_var)
-        # self.lang_option.pack(pady=5)
 
         self.chat_model_var = ctk.StringVar(value="Regular")
         ctk.CTkLabel(self, text="聊天AI模型:").pack(pady=5)

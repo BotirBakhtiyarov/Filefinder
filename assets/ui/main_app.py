@@ -7,6 +7,7 @@ from pynput import keyboard
 from .search_frame import SearchFrame
 from .chat_frame import ChatFrame
 from .setup_wizard import SetupWizard
+from .settings import SettingsWindow
 
 class MainApp(ctk.CTk):
     def __init__(self):
@@ -22,7 +23,7 @@ class MainApp(ctk.CTk):
             with open(translation_path, 'r', encoding='utf-8') as f:
                 self.translations = json.load(f)
         except Exception as e:
-            messagebox.showerror("Error", f"Failed to load translations: {str(e)}")
+            messagebox.showerror("错误", f"加载翻译文件失败: {str(e)}")
             self.translations = {}
 
         appdata = os.getenv('APPDATA')
@@ -70,7 +71,7 @@ class MainApp(ctk.CTk):
         try:
             self.save_config()
         except Exception as e:
-            messagebox.showerror("Error", f"保存配置失败: {str(e)}")
+            messagebox.showerror("错误", f"保存配置失败: {str(e)}")
 
         self.api_url = config["api_url"]
         self.api_key = config["api_key"]
@@ -133,9 +134,9 @@ class MainApp(ctk.CTk):
         }
         try:
             with open(self.config_file, "w", encoding='utf-8') as f:
-                json.dump(self.config, f, indent=4)
+                json.dump(self.config, f, indent=4, ensure_ascii=False)
         except Exception as e:
-            raise
+            raise Exception(f"保存配置失败: {str(e)}")
 
     def initialize_ui(self):
         ctk.set_appearance_mode("dark" if self.dark_mode.get() else "light")
@@ -148,18 +149,39 @@ class MainApp(ctk.CTk):
         self.sidebar.grid(row=0, column=0, sticky="ns", padx=0, pady=0)
         self.sidebar.grid_remove()
 
-        ctk.CTkButton(self.sidebar, text=self.get_translation("🔍搜索"), command=lambda: self.switch_mode("search"),
-                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=(50,10), padx=10, fill="x")
-        ctk.CTkButton(self.sidebar, text=self.get_translation("💬聊天"), command=lambda: self.switch_mode("chat"),
-                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
-        ctk.CTkButton(self.sidebar, text=self.get_translation("🛠设置"), command=self.show_settings,
-                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10, padx=10, fill="x")
+        ctk.CTkButton(
+            self.sidebar,
+            text=self.get_translation("🔍搜索"),
+            command=lambda: self.switch_mode("search"),
+            fg_color="#1f6aa8",
+            hover_color="#14487f"
+        ).pack(pady=(50,10), padx=10, fill="x")
+        ctk.CTkButton(
+            self.sidebar,
+            text=self.get_translation("💬聊天"),
+            command=lambda: self.switch_mode("chat"),
+            fg_color="#1f6aa8",
+            hover_color="#14487f"
+        ).pack(pady=10, padx=10, fill="x")
+        ctk.CTkButton(
+            self.sidebar,
+            text=self.get_translation("🛠设置"),
+            command=self.show_settings,
+            fg_color="#1f6aa8",
+            hover_color="#14487f"
+        ).pack(pady=10, padx=10, fill="x")
 
         self.content_frame = ctk.CTkFrame(self, corner_radius=10)
         self.content_frame.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
 
-        self.burger_btn = ctk.CTkButton(self, text="☰", width=40, command=self.toggle_sidebar, fg_color="#1f6aa8",
-                                        hover_color="#14487f")
+        self.burger_btn = ctk.CTkButton(
+            self,
+            text="☰",
+            width=40,
+            command=self.toggle_sidebar,
+            fg_color="#1f6aa8",
+            hover_color="#14487f"
+        )
         self.burger_btn.grid(row=0, column=0, sticky="nw", padx=5, pady=5)
 
         self.search_frame = SearchFrame(self, self.index_file)
@@ -189,72 +211,8 @@ class MainApp(ctk.CTk):
     def show_settings(self):
         if hasattr(self, "settings_window") and self.settings_window.winfo_exists():
             self.settings_window.lift()
-            return
-        self.settings_window = ctk.CTkToplevel(self)
-        self.settings_window.title(self.get_translation("settings"))
-        self.settings_window.geometry("400x700")
-        self.settings_window.resizable(False, True)
-        ico_path = os.path.join(self.base_path, 'img', 'logo.ico')
-        self.settings_window.iconbitmap(ico_path)
-
-        # ctk.CTkLabel(self.settings_window, text="Language:").pack(pady=5)
-        # self.lang_option = ctk.CTkOptionMenu(self.settings_window, values=["ZH"],
-        #                                      variable=self.current_language)
-        # self.lang_option.pack(pady=5)
-
-        ctk.CTkLabel(self.settings_window, text="聊天AI模型:").pack(pady=5)
-        self.chat_model_option = ctk.CTkOptionMenu(self.settings_window, values=self.chat_models,
-                                                   variable=self.chat_model)
-        self.chat_model_option.pack(pady=5)
-
-        fields = [
-            ("Embedding API URL", "api_url"), ("Embedding API Key", "api_key"),
-            ("Chat API URL", "chat_api_url"), ("Chat API Key", "chat_api_key")
-        ]
-        self.entries = {}
-        for label, key in fields:
-            ctk.CTkLabel(self.settings_window, text=f"{label}:").pack(pady=5)
-            entry = ctk.CTkEntry(self.settings_window, width=300)
-            entry.insert(0, getattr(self, key))
-            entry.pack(pady=5)
-            self.entries[key] = entry
-
-        ctk.CTkLabel(self.settings_window, text=self.get_translation("document_dir")).pack(pady=5)
-        self.doc_btn = ctk.CTkButton(self.settings_window, text=self.document_dir or "Select",
-                                     command=self.select_doc_dir)
-        self.doc_btn.pack(pady=5)
-        ctk.CTkLabel(self.settings_window, text=self.get_translation("image_dir")).pack(pady=5)
-        self.img_btn = ctk.CTkButton(self.settings_window, text=self.image_dir or "Select", command=self.select_img_dir)
-        self.img_btn.pack(pady=5)
-
-        ctk.CTkSwitch(self.settings_window, text=self.get_translation("dark_mode"), variable=self.dark_mode,
-                      command=self.update_appearance).pack(pady=10)
-        ctk.CTkButton(self.settings_window, text=self.get_translation("save"), command=self.save_settings,
-                      fg_color="#1f6aa8", hover_color="#14487f").pack(pady=10)
-
-    def select_doc_dir(self):
-        dir = ctk.filedialog.askdirectory(initialdir=self.document_dir)
-        if dir:
-            self.document_dir = dir
-            self.doc_btn.configure(text=dir)
-
-    def select_img_dir(self):
-        dir = ctk.filedialog.askdirectory(initialdir=self.image_dir)
-        if dir:
-            self.image_dir = dir
-            self.img_btn.configure(text=dir)
-
-    def save_settings(self):
-        for key, entry in self.entries.items():
-            setattr(self, key, entry.get().strip())
-        self.save_config()
-        self.update_texts()
-        self.update_appearance()
-        messagebox.showinfo("Success", "设置已成功保存!")
-        self.settings_window.destroy()
-
-    def update_appearance(self):
-        ctk.set_appearance_mode("dark" if self.dark_mode.get() else "light")
+        else:
+            self.settings_window = SettingsWindow(self)
 
     def minimize_to_tray(self):
         self.withdraw()
