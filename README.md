@@ -1,4 +1,4 @@
-# Smart File Finder & Chat Assistant v2 🇨🇳📂
+# AI File Finder v2📂
 
 [![GitHub stars](https://img.shields.io/github/stars/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/network/members)
