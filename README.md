@@ -1,211 +1,166 @@
-# AI File Finder v2📂
+# Filefinder v2
 
-[![GitHub stars](https://img.shields.io/github/stars/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/BotirBakhtiyarov/Filefinder?style=social)](https://github.com/BotirBakhtiyarov/Filefinder/network/members)
-[![GitHub license](https://img.shields.io/github/license/BotirBakhtiyarov/Filefinder)](https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE)
-[![Python version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/downloads/)
-![Flask](https://img.shields.io/badge/Flask-3.0.0-green)
-![License](https://img.shields.io/badge/License-MIT-yellow)
+<p align="center">
+  <strong>AI-Powered File Intelligence Platform for Chinese Documents</strong>
+</p>
 
-**Smart File Finder & Chat Assistant v2** is a powerful Python-based desktop application designed to streamline file management and information retrieval for Chinese-speaking users. With a sleek, Chinese-localized interface, this tool leverages advanced AI to search, summarize, and interact with documents and images.
+<p align="center">
+  <a href="https://github.com/BotirBakhtiyarov/Filefinder/stargazers">
+    <img src="https://img.shields.io/github/stars/BotirBakhtiyarov/Filefinder?style=social" alt="GitHub stars"/>
+  </a>
+  <a href="https://github.com/BotirBakhtiyarov/Filefinder/network/members">
+    <img src="https://img.shields.io/github/forks/BotirBakhtiyarov/Filefinder?style=social" alt="GitHub forks"/>
+  </a>
+  <a href="https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/BotirBakhtiyarov/Filefinder" alt="License"/>
+  </a>
+  <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+"/>
+  <img src="https://img.shields.io/badge/Flask-3.0.0-green" alt="Flask"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="MIT License"/>
+</p>
 
-Built with `customtkinter` for a modern GUI and `Flask` for a robust API backend, it’s perfect for professionals, researchers, and teams handling large file collections in Chinese environments. 🚀
-
----
-## Install Setup File
-Download `FileFinderSetup.exe` from [Releases](https://github.com/BotirBakhtiyarov/FileFinder/releases).
-
-## ✨ Features
-
-- **Semantic File Search 🔍**: Find documents (DOCX, PDF, TXT) and images (JPG, PNG) using natural language queries in Chinese.
-- **AI-Driven Insights 🤖**: Generate embeddings for text and images with models optimized for Chinese content, powered by SentenceTransformers and ChineseCLIP.
-- **OCR Excellence 📸**: Extract and summarize text from images and PDFs using Tesseract OCR, tailored for Chinese characters.
-- **Smart Chat Assistant 💬**: Engage in contextual conversations or summarize files with a Chinese-focused AI, supporting both Normal and RAG modes.
-- **Chinese Interface 🇨🇳**: Fully localized UI with intuitive navigation, designed for native Chinese speakers.
-- **Dark/Light Mode 🌗**: Toggle themes for comfortable use in any lighting.
-- **System Tray Integration 🖥️**: Minimize to tray with `Alt+Q` hotkey to restore.
-- **Continuous Indexing 🔄**: Automatically updates file indexes for monitored directories.
+<p align="center">
+  Semantic search, OCR, and AI chat for your documents and images — optimized for Chinese content.
+</p>
 
 ---
 
-## 📸 Screenshots
+## Table of Contents
 
-*To be updated with v2’s Chinese interface.*
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Screenshots](#screenshots)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
+
+---
+
+## Overview
+
+**Filefinder v2** is a powerful desktop application that transforms how you manage and interact with files. Built for professionals, researchers, and teams working with large document collections in Chinese environments, it combines semantic search, OCR, and retrieval-augmented generation (RAG) into a single intelligent assistant.
+
+Whether you need to find a specific document, extract text from images, or have a conversation about your files, Filefinder makes it feel effortless.
+
+---
+
+## Key Features
+
+- **Semantic File Search** — Find documents (DOCX, PDF, TXT) and images (JPG, PNG) using natural language queries in Chinese.
+- **AI-Driven Insights** — Generate embeddings for text and images with models optimized for Chinese content, powered by SentenceTransformers and ChineseCLIP.
+- **OCR Excellence** — Extract and summarize text from images and PDFs using Tesseract OCR with Chinese character support (`chi_sim`).
+- **Smart Chat Assistant** — Engage in contextual conversations or summarize files with a Chinese-focused AI, supporting both Normal and RAG modes.
+- **Chinese Interface** — Fully localized UI with intuitive navigation, designed for native Chinese speakers.
+- **Dark/Light Mode** — Toggle themes for comfortable use in any lighting.
+- **System Tray Integration** — Minimize to tray and restore with a global `Alt+Q` hotkey.
+- **Continuous Indexing** — Automatically update file indexes for monitored directories.
+
+---
+
+## Screenshots
+
+> Screenshots will be updated with v2's Chinese interface.
 
 - **Search Tab**: ![Search Tab](screenshots/1.PNG)
 - **Chat Assistant**: ![Chat Assistant](screenshots/2.PNG)
-- **OCR Summary**: ![OCR Summary](screenshots/3.PNG)
+- **OCR Summary**: *(to be added)*
 
 ---
 
-## 🚀 Installation
+## Installation
 
-### Prerequisites
+### Option 1: Windows Installer (Recommended)
 
-- **Python 🐍**: 3.10 or higher
-- **Tesseract OCR 📖**: For Chinese text extraction  
-  - **Windows**: Download, add to PATH, ensure `chi_sim` data is installed  
-  - **Linux**: `sudo apt install tesseract-ocr tesseract-ocr-chi-sim`  
-  - **macOS**: `brew install tesseract`
-- **Poppler 📄**: For PDF processing  
-  - **Windows**: Download, add to PATH  
-  - **Linux**: `sudo apt install poppler-utils`  
-  - **macOS**: `brew install poppler`
+Download `FileFinderSetup.exe` from the [Releases](https://github.com/BotirBakhtiyarov/Filefinder/releases) page and run the installer.
 
-### Setup Steps
+### Option 2: Run from Source
+
+**Requirements:**
+- Python 3.10+
+- Tesseract OCR with Chinese language pack (`chi_sim`)
+
+**Steps:**
 
 ```bash
-# Clone the Repository 📥
+# Clone the repository
 git clone https://github.com/BotirBakhtiyarov/Filefinder.git
 cd Filefinder
 
-# Set Up Virtual Environment 🛠️
-python -m venv .venv
-source .venv/bin/activate  # Linux/macOS
-.venv\Scripts\activate     # Windows
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install Dependencies 📦
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### Configure AI Models ⚙️
-
-Update `MODEL_DIR` in `api_server.py`:
-
-```python
-MODEL_DIR = "models/"  # Path to Chinese-optimized models
-```
-
-Make sure models like:
-
-- `paraphrase-multilingual-MiniLM-L12-v2`
-- `chinese-clip-vit-base-patch16`
-
-are available or downloaded.
-
-### Launch the App
-
-```bash
-# Start the API server 🌐
-python api_server.py
-
-# Run the main application 🎉
-python app.py
+# Run the application
+python main.py
 ```
 
 ---
 
-## 🖱️ Usage
+## Usage
 
-### First Launch 🚀
-
-A Chinese-language setup wizard will guide you to:
-
-- Enter API keys/URLs
-- Set document/image directories
-- Choose theme (Dark/Light)
-
-### Search Files 🔎
-
-- Go to the **“搜索”** tab.
-- Enter Chinese queries (e.g., `年度报告概述`).
-- View results and:
-  - **打开**: Open file
-  - **摘要**: AI-generated summary
-  - **OCR 摘要**: OCR-based summary for images
-
-### Chat Assistant 💬
-
-- Go to the **“聊天”** tab
-- Select:
-  - **Normal Mode**: For general chat
-  - **RAG Mode**: Upload and ask about specific files
-- Ask questions in Chinese and get summarized answers
-
-### System Tray 🖥️
-
-- Minimize to tray by closing window
-- Press **Alt+Q** to restore
+1. **Launch** Filefinder from the Start Menu or source.
+2. **Select directories** to monitor and index.
+3. **Search** your files using natural language in Chinese.
+4. **Chat** with your documents in Normal or RAG mode.
+5. Press `Alt+Q` anywhere to bring the app to the foreground.
 
 ---
 
-## 📁 Project Structure
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Desktop GUI | CustomTkinter |
+| Backend API | Flask |
+| Embeddings | ChineseCLIP, SentenceTransformers (paraphrase-multilingual-MiniLM-L12-v2) |
+| OCR | Tesseract OCR |
+| AI Models | Compatible with DeepSeek / OpenAI-style APIs |
+| Packaging | PyInstaller / Windows Installer |
+
+---
+
+## Project Structure
 
 ```
-FileFinder_v2/
-├── .venv/              # Virtual environment
-├── assets/
-│   ├── ui/             # Chinese-localized GUI
-│   │   ├── chat_frame.py
-│   │   ├── main_app.py
-│   │   ├── search_frame.py
-│   │   ├── setup_wizard.py
-│   │   └── summary_window.py
-│   └── utils/
-│       └── file_utils.py
-├── app.py              # App entry point
-├── api_server.py       # Flask backend
-├── requirements.txt    # Dependencies
-└── myicon.ico          # App icon
+Filefinder/
+├── app/                 # Application modules
+├── assets/              # Images and static resources
+├── screenshots/         # UI screenshots
+├── main.py              # Application entry point
+├── requirements.txt     # Python dependencies
+└── README.md
 ```
 
 ---
 
-## 🌐 API Endpoints
+## Contributing
 
-`api_server.py` includes:
+Contributions are welcome! Please open an issue or submit a pull request with your improvements.
 
-- `/embed_text`: Embed Chinese text
-- `/embed_image`: Embed image
-- `/embed_clip_text`: CLIP-based text-image embedding
-- `/extract_pdf_with_ocr`: OCR for Chinese PDFs
-- `/extract_image_ocr`: OCR for Chinese images
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! 🌟
-
-```bash
-# Fork and branch
-git checkout -b feature/YourFeature
-
-# Commit and push
-git commit -m "Add YourFeature"
-git push origin feature/YourFeature
-```
-
-- Follow PEP 8
-- Maintain Chinese localization
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-## ⚠️ Troubleshooting
+## License
 
-- **File Access Errors**: Verify file paths and network drives.
-- **OCR Issues**: Make sure Tesseract is installed with `chi_sim` support.
-- **API Failures**: Confirm `api_server.py` is running and keys are set.
-- **UI Bugs**: Check `customtkinter` compatibility.
-
-Open an [issue on GitHub](https://github.com/BotirBakhtiyarov/Filefinder/issues) with logs if needed.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 📜 License
+## Contact
 
-MIT License – see [LICENSE](https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE) for details.
-
----
-
-## 🙌 Acknowledgments
-
-- **CustomTkinter**: Modern GUI framework
-- **SentenceTransformers**: Chinese text embeddings
-- **Transformers**: ChineseCLIP integration
-- **Tesseract OCR**: Robust OCR engine
-
----
-
-**Built with ❤️ for Chinese-speaking users, AI File Finder v2 is your ultimate file management companion!**
-
+- **Author:** Botir Bakhtiyarov
+- **Email:** hello@bbotir.xyz
+- **Website:** https://bbotir.xyz
+- **Telegram:** [@opensource_uz](https://t.me/opensource_uz)
