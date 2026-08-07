@@ -1,166 +1,65 @@
-# Filefinder v2
+# FileFinder v3
 
-<p align="center">
-  <strong>AI-Powered File Intelligence Platform for Chinese Documents</strong>
-</p>
+Cross-platform (Windows / Linux / Android) **semantic file search + RAG chat** desktop
+application built with [Flet](https://flet.dev) (Flutter for Python). Everything runs
+in a single process — no local HTTP server.
 
-<p align="center">
-  <a href="https://github.com/BotirBakhtiyarov/Filefinder/stargazers">
-    <img src="https://img.shields.io/github/stars/BotirBakhtiyarov/Filefinder?style=social" alt="GitHub stars"/>
-  </a>
-  <a href="https://github.com/BotirBakhtiyarov/Filefinder/network/members">
-    <img src="https://img.shields.io/github/forks/BotirBakhtiyarov/Filefinder?style=social" alt="GitHub forks"/>
-  </a>
-  <a href="https://github.com/BotirBakhtiyarov/Filefinder/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/BotirBakhtiyarov/Filefinder" alt="License"/>
-  </a>
-  <img src="https://img.shields.io/badge/python-3.10%2B-blue" alt="Python 3.10+"/>
-  <img src="https://img.shields.io/badge/Flask-3.0.0-green" alt="Flask"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="MIT License"/>
-</p>
+## Features
 
-<p align="center">
-  Semantic search, OCR, and AI chat for your documents and images — optimized for Chinese content.
-</p>
+- **Hybrid search** — semantic vector search (BGE embeddings, ONNX) combined with
+  SQLite FTS5 keyword search (`0.7 * semantic + 0.3 * keyword`).
+- **RAG chat** — chat with your files through a local Ollama model or the DeepSeek
+  API; retrieved chunks are injected as context.
+- **Broad file support** — txt, md, docx, xlsx, pptx, pdf (with OCR fallback), and
+  images (jpg/jpeg/png/bmp) via Tesseract OCR.
+- **Background indexing** — watchdog-based live re-indexing, cooperative cancel,
+  per-file failure isolation.
+- **Auto-update** — checks GitHub Releases, downloads and installs updates in-app.
+- **i18n** — Chinese (default), Uzbek, English.
+- **Cross-platform** — Windows and Linux in Phase 1; Android behind abstractions
+  (sqlite-vec vector store) in Phase 2.
 
----
-
-## Table of Contents
-
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Screenshots](#screenshots)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Contributing](#contributing)
-- [License](#license)
-- [Contact](#contact)
-
----
-
-## Overview
-
-**Filefinder v2** is a powerful desktop application that transforms how you manage and interact with files. Built for professionals, researchers, and teams working with large document collections in Chinese environments, it combines semantic search, OCR, and retrieval-augmented generation (RAG) into a single intelligent assistant.
-
-Whether you need to find a specific document, extract text from images, or have a conversation about your files, Filefinder makes it feel effortless.
-
----
-
-## Key Features
-
-- **Semantic File Search** — Find documents (DOCX, PDF, TXT) and images (JPG, PNG) using natural language queries in Chinese.
-- **AI-Driven Insights** — Generate embeddings for text and images with models optimized for Chinese content, powered by SentenceTransformers and ChineseCLIP.
-- **OCR Excellence** — Extract and summarize text from images and PDFs using Tesseract OCR with Chinese character support (`chi_sim`).
-- **Smart Chat Assistant** — Engage in contextual conversations or summarize files with a Chinese-focused AI, supporting both Normal and RAG modes.
-- **Chinese Interface** — Fully localized UI with intuitive navigation, designed for native Chinese speakers.
-- **Dark/Light Mode** — Toggle themes for comfortable use in any lighting.
-- **System Tray Integration** — Minimize to tray and restore with a global `Alt+Q` hotkey.
-- **Continuous Indexing** — Automatically update file indexes for monitored directories.
-
----
-
-## Screenshots
-
-> Screenshots will be updated with v2's Chinese interface.
-
-- **Search Tab**: ![Search Tab](screenshots/1.PNG)
-- **Chat Assistant**: ![Chat Assistant](screenshots/2.PNG)
-- **OCR Summary**: *(to be added)*
-
----
-
-## Installation
-
-### Option 1: Windows Installer (Recommended)
-
-Download `FileFinderSetup.exe` from the [Releases](https://github.com/BotirBakhtiyarov/Filefinder/releases) page and run the installer.
-
-### Option 2: Run from Source
-
-**Requirements:**
-- Python 3.10+
-- Tesseract OCR with Chinese language pack (`chi_sim`)
-
-**Steps:**
+## Install
 
 ```bash
-# Clone the repository
-git clone https://github.com/BotirBakhtiyarov/Filefinder.git
-cd Filefinder
+# with Poetry (recommended)
+poetry install
 
-# Create a virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the application
-python main.py
+# or plain pip (editable install)
+pip install -e .
 ```
 
----
+## Run
 
-## Usage
-
-1. **Launch** Filefinder from the Start Menu or source.
-2. **Select directories** to monitor and index.
-3. **Search** your files using natural language in Chinese.
-4. **Chat** with your documents in Normal or RAG mode.
-5. Press `Alt+Q` anywhere to bring the app to the foreground.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|-------|------------|
-| Desktop GUI | CustomTkinter |
-| Backend API | Flask |
-| Embeddings | ChineseCLIP, SentenceTransformers (paraphrase-multilingual-MiniLM-L12-v2) |
-| OCR | Tesseract OCR |
-| AI Models | Compatible with DeepSeek / OpenAI-style APIs |
-| Packaging | PyInstaller / Windows Installer |
-
----
-
-## Project Structure
-
-```
-Filefinder/
-├── app/                 # Application modules
-├── assets/              # Images and static resources
-├── screenshots/         # UI screenshots
-├── main.py              # Application entry point
-├── requirements.txt     # Python dependencies
-└── README.md
+```bash
+flet run
+# or
+python -m filefinder.main
 ```
 
----
+## Build
 
-## Contributing
+```bash
+flet build windows   # Windows installer/app
+flet build linux     # Linux bundle
+flet build apk       # Android (Phase 2)
+```
 
-Contributions are welcome! Please open an issue or submit a pull request with your improvements.
+## Tech stack
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+| Component        | Technology                                   |
+|------------------|----------------------------------------------|
+| UI               | Flet (Flutter for Python)                    |
+| Embeddings       | BGE-M3 / bge-small-zh via ONNX Runtime       |
+| Vector store     | ChromaDB (desktop), sqlite-vec (Android)     |
+| Keyword search   | SQLite FTS5 (bm25)                           |
+| OCR              | Tesseract (pytesseract) + Pillow/pdf2image   |
+| File parsing     | pdfplumber, python-docx, openpyxl, python-pptx |
+| File watching    | watchdog                                     |
+| LLM providers    | Ollama (local), DeepSeek (API)               |
+| Updates          | GitHub Releases API                          |
+| Config security  | cryptography (Fernet, machine-bound key)     |
 
----
+## Author
 
-## License
-
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-
-- **Author:** Botir Bakhtiyarov
-- **Email:** hello@bbotir.xyz
-- **Website:** https://bbotir.xyz
-- **Telegram:** [@opensource_uz](https://t.me/opensource_uz)
+Botir Bakhtiyarov — https://github.com/BotirBakhtiyarov/Filefinder

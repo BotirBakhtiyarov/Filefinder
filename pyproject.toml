@@ -1,0 +1,64 @@
+[tool.poetry]
+name = "filefinder"
+version = "3.0.0"
+description = "FileFinder v3 — cross-platform semantic file search and RAG chat desktop app (Flet)"
+authors = ["Botir Bakhtiyarov"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/BotirBakhtiyarov/Filefinder"
+repository = "https://github.com/BotirBakhtiyarov/Filefinder"
+packages = [{ include = "filefinder", from = "src" }]
+include = [
+    { path = "assets", format = ["sdist", "wheel"] },
+    { path = "models/.gitkeep", format = ["sdist"] },
+]
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.14"
+flet = ">=0.24"
+chromadb = "*"
+onnxruntime = "*"
+tokenizers = "*"
+safetensors = "*"
+huggingface-hub = "*"
+pytesseract = "*"
+Pillow = "*"
+pdfplumber = "*"
+pdf2image = "*"
+python-docx = "*"
+openpyxl = "*"
+python-pptx = "*"
+watchdog = "*"
+pystray = "*"
+pynput = "*"
+cryptography = "*"
+requests = "*"
+numpy = "*"
+sqlite-vec = { version = "*", optional = true }
+
+[tool.poetry.group.android]
+optional = true
+
+[tool.poetry.group.android.dependencies]
+sqlite-vec = "*"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "*"
+
+[tool.poetry.extras]
+android = ["sqlite-vec"]
+
+[tool.poetry.scripts]
+filefinder = "filefinder.main:run"
+
+[build-system]
+requires = ["poetry-core>=1.8"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.flet]
+org = "com.botirbakhtiyarov"
+product = "FileFinder"
+company = "Botir Bakhtiyarov"
+
+[tool.flet.app]
+path = "src"
