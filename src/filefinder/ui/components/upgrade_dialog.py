@@ -27,7 +27,7 @@ from filefinder.ui import maybe_await
 
 logger = logging.getLogger(__name__)
 
-_WECHAT_ID = "bbotir_ff"
+_WECHAT_ID = "nick_2620"
 _FEATURES = ("files", "rag", "ocr", "watch", "export", "updates")
 _KEY_MAX_LEN = 19  # "FF3" + dash-separated 4-char groups
 _DIALOG_WIDTH = 440
