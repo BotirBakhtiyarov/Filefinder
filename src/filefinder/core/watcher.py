@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import logging
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Any
 
 from filefinder.core import constants
 from filefinder.core.config import is_android
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)
 ChangeCallback = Callable[[str, str], None]
 
 
-def _load_watchdog() -> Optional[tuple]:
+def _load_watchdog() -> tuple | None:
     """Import watchdog lazily; return (Observer, handler base) or None."""
     try:
         from watchdog.events import FileSystemEventHandler  # type: ignore
@@ -50,7 +51,7 @@ class FileWatcher:
     """
 
     def __init__(self) -> None:
-        self._observer: object = None
+        self._observer: Any = None
         self._handler: object = None
         self._timers: dict[str, threading.Timer] = {}
         self._lock = threading.Lock()
@@ -98,19 +99,19 @@ class FileWatcher:
         watcher = self
 
         class _Handler(base):  # type: ignore[misc, valid-type]
-            def on_created(self, event):  # noqa: N802 - watchdog API
+            def on_created(self, event):
                 if not event.is_directory and watcher._should_handle(event.src_path):
                     watcher._schedule("upsert", event.src_path, callback)
 
-            def on_modified(self, event):  # noqa: N802 - watchdog API
+            def on_modified(self, event):
                 if not event.is_directory and watcher._should_handle(event.src_path):
                     watcher._schedule("upsert", event.src_path, callback)
 
-            def on_deleted(self, event):  # noqa: N802 - watchdog API
+            def on_deleted(self, event):
                 if not event.is_directory and watcher._should_handle(event.src_path):
                     watcher._schedule("delete", event.src_path, callback)
 
-            def on_moved(self, event):  # noqa: N802 - watchdog API
+            def on_moved(self, event):
                 if event.is_directory:
                     return
                 if watcher._should_handle(event.src_path):
@@ -193,7 +194,7 @@ class FileWatcher:
 # Module-level singleton API (spec section 4.10)
 # ----------------------------------------------------------------------
 
-_watcher: Optional[FileWatcher] = None
+_watcher: FileWatcher | None = None
 _watcher_lock = threading.Lock()
 
 

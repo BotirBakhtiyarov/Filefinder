@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "filefinder"
-version = "3.0.0"
+version = "3.0.1"
 description = "FileFinder v3 — cross-platform semantic file search and RAG chat desktop app (Flet)"
 authors = ["Botir Bakhtiyarov"]
 license = "MIT"
@@ -62,3 +62,24 @@ company = "Botir Bakhtiyarov"
 
 [tool.flet.app]
 path = "src"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+# S110: try/except/pass is the intentional graceful-degradation pattern in this
+# codebase (optional deps, per-file indexing failures must never crash the UI).
+# DTZ*: naive local datetimes are fine for a desktop app (single timezone user).
+ignore = ["S110", "DTZ011", "DTZ005", "DTZ006"]
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+warn_unused_ignores = false
+disable_error_code = ["annotation-unchecked"]
+
+[[tool.mypy.overrides]]
+module = "filefinder.ui.*"
+# flet 0.86's per-control Event[T] generics conflict with our base ControlEvent
+# handler annotations (contravariance); the handlers are correct at runtime.
+disable_error_code = ["arg-type", "assignment", "attr-defined", "union-attr", "operator", "dict-item", "call-arg", "return-value"]

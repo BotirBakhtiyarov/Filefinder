@@ -19,7 +19,7 @@ import threading
 import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from filefinder.core.constants import APP_ID
 
@@ -114,7 +114,7 @@ def get_model_name() -> str:
 
 def _machine_id() -> bytes:
     """Build a stable per-machine identifier from the MAC and node name."""
-    raw = f"{uuid.getnode()}:{platform.node()}".encode("utf-8")
+    raw = f"{uuid.getnode()}:{platform.node()}".encode()
     return raw
 
 
@@ -301,7 +301,7 @@ def save_config(cfg: Config) -> None:
 
 
 _config_lock = threading.RLock()
-_config: Optional[Config] = None
+_config: Config | None = None
 
 
 def get_config() -> Config:
@@ -336,7 +336,7 @@ def get_assets_dir() -> Path:
 
 _i18n_lock = threading.RLock()
 _i18n_cache: dict[str, dict[str, str]] = {}
-_current_language: Optional[str] = None
+_current_language: str | None = None
 
 
 def load_i18n(lang: str) -> dict[str, str]:
@@ -383,7 +383,7 @@ def t(key: str, **kwargs: Any) -> str:
     ``kwargs`` are interpolated with :meth:`str.format` when provided.
     """
     lang = _active_language()
-    text: Optional[str] = load_i18n(lang).get(key)
+    text: str | None = load_i18n(lang).get(key)
     if text is None and lang != DEFAULT_LANGUAGE:
         text = load_i18n(DEFAULT_LANGUAGE).get(key)
     if text is None and lang != FALLBACK_LANGUAGE:
@@ -403,7 +403,7 @@ def t(key: str, **kwargs: Any) -> str:
 # ----------------------------------------------------------------------
 
 
-def is_safe_path(p: str | os.PathLike[str], roots: Optional[list[str]] = None) -> bool:
+def is_safe_path(p: str | os.PathLike[str], roots: list[str] | None = None) -> bool:
     """Check that ``p`` resolves inside one of the monitored root directories.
 
     Rejects ``..`` traversal escaping the monitored roots.

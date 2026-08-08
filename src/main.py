@@ -10,7 +10,7 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 
-from filefinder.main import main, run  # noqa: F401,E402
+from filefinder.main import main, run  # noqa: F401
 
 if __name__ == "__main__":
     run()

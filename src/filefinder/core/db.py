@@ -15,8 +15,9 @@ import sqlite3
 import threading
 import time
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Optional, Sequence
+from typing import Any
 
 from filefinder.core.config import get_app_data_dir, is_android
 
@@ -122,8 +123,8 @@ class ChromaStore(VectorStore):
 
     def __init__(
         self,
-        persist_dir: Optional[str | os.PathLike[str]] = None,
-        collection_name: Optional[str] = None,
+        persist_dir: str | os.PathLike[str] | None = None,
+        collection_name: str | None = None,
     ) -> None:
         self._persist_dir = str(persist_dir or (get_app_data_dir() / "chroma"))
         self._collection_name = collection_name or self._COLLECTION_NAME
@@ -222,7 +223,7 @@ class SqliteVecStore(VectorStore):
         "implementation before enabling Android builds."
     )
 
-    def __init__(self, db_path: Optional[str | os.PathLike[str]] = None) -> None:
+    def __init__(self, db_path: str | os.PathLike[str] | None = None) -> None:
         self._db_path = str(db_path or (get_app_data_dir() / "vectors.db"))
         try:
             import sqlite_vec  # noqa: F401
@@ -253,8 +254,8 @@ class SqliteVecStore(VectorStore):
 
 
 _store_lock = threading.RLock()
-_vector_store: Optional[VectorStore] = None
-_image_vector_store: Optional[VectorStore] = None
+_vector_store: VectorStore | None = None
+_image_vector_store: VectorStore | None = None
 
 
 def get_vector_store() -> VectorStore:
@@ -298,7 +299,7 @@ class Database:
     (``check_same_thread=False``) and guarded by an :class:`threading.RLock`.
     """
 
-    def __init__(self, db_path: Optional[str | os.PathLike[str]] = None) -> None:
+    def __init__(self, db_path: str | os.PathLike[str] | None = None) -> None:
         self._db_path = str(db_path or (get_app_data_dir() / "files.db"))
         self._lock = threading.RLock()
         Path(self._db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -353,7 +354,7 @@ class Database:
             )
             self._conn.commit()
 
-    def get_kv(self, key: str) -> Optional[str]:
+    def get_kv(self, key: str) -> str | None:
         """Get a value from the ``kv`` table, or None."""
         with self._lock:
             row = self._conn.execute(
@@ -447,7 +448,7 @@ class Database:
             logger.warning("Image vector cleanup failed for %s: %s", path, exc)
         return True
 
-    def get_file_by_path(self, path: str) -> Optional[dict[str, Any]]:
+    def get_file_by_path(self, path: str) -> dict[str, Any] | None:
         """Return the file row for ``path`` as a dict, or None."""
         with self._lock:
             row = self._conn.execute(
@@ -455,7 +456,7 @@ class Database:
             ).fetchone()
         return dict(row) if row else None
 
-    def get_file_by_id(self, file_id: int) -> Optional[dict[str, Any]]:
+    def get_file_by_id(self, file_id: int) -> dict[str, Any] | None:
         """Return the file row for ``file_id`` as a dict, or None."""
         with self._lock:
             row = self._conn.execute(
@@ -476,8 +477,10 @@ class Database:
             return []
         placeholders = ",".join("?" for _ in extensions)
         with self._lock:
+            # Values are bound via placeholders; only the IN() list shape is
+            # built from our own extensions argument (no user input).
             rows = self._conn.execute(
-                f"SELECT * FROM files WHERE extension IN ({placeholders})",
+                f"SELECT * FROM files WHERE extension IN ({placeholders})",  # nosec B608
                 tuple(extensions),
             ).fetchall()
         return [dict(row) for row in rows]
@@ -571,7 +574,7 @@ class Database:
         get_vector_store().add(embedding_ids, embeddings, metadatas)
         return embedding_ids
 
-    def get_chunk_content(self, file_id: int, chunk_index: int) -> Optional[str]:
+    def get_chunk_content(self, file_id: int, chunk_index: int) -> str | None:
         """Return a chunk's text, or None."""
         with self._lock:
             row = self._conn.execute(
@@ -650,10 +653,10 @@ class Database:
                 (conversation_id, role, content, time.time()),
             )
             self._conn.commit()
-        return int(cursor.lastrowid)
+        return int(cursor.lastrowid or 0)
 
     def get_chat_history(
-        self, conversation_id: str, limit: Optional[int] = None
+        self, conversation_id: str, limit: int | None = None
     ) -> list[dict[str, Any]]:
         """Return messages of a conversation in chronological order."""
         with self._lock:
@@ -702,7 +705,7 @@ class Database:
 
 
 _db_lock = threading.RLock()
-_db: Optional[Database] = None
+_db: Database | None = None
 
 
 def get_db() -> Database:

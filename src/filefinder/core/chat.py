@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import threading
 import uuid
-from typing import Any, Optional
+from typing import Any
 
 from filefinder.core import constants
 from filefinder.core import license as license_mod
@@ -257,7 +257,7 @@ class ChatEngine:
         return "\n\n".join(blocks)
 
     def _compose_context(
-        self, text: str, use_rag: bool, attachment_paths: Optional[list[str]]
+        self, text: str, use_rag: bool, attachment_paths: list[str] | None
     ) -> str:
         """Combine RAG search results and attached files into one context."""
         parts = []
@@ -279,9 +279,9 @@ class ChatEngine:
     ) -> str:
         """Assemble the full prompt (English scaffold, i18n-agnostic)."""
         parts = [
-            "You are FileFinder, a helpful assistant that answers questions "
+            ("You are FileFinder, a helpful assistant that answers questions "
             "about the user's local files. Answer in the same language as "
-            "the user's message. Be concise.",
+            "the user's message. Be concise."),
         ]
         if context:
             parts.append(
@@ -436,6 +436,7 @@ class ChatEngine:
     def _stream_ollama(self, prompt: str, api_url: str, model: str) -> Any:
         """Yield raw text chunks from Ollama's streaming ``/api/generate``."""
         import json
+
         import requests  # lazy import
 
         with requests.post(
@@ -465,6 +466,7 @@ class ChatEngine:
         (DeepSeek-R1 style thinking, etc.) and ``"answer"`` otherwise.
         """
         import json
+
         import requests  # lazy import
 
         with requests.post(
@@ -483,7 +485,8 @@ class ChatEngine:
             timeout=_REQUEST_TIMEOUT,
         ) as response:
             response.raise_for_status()
-            for line in response.iter_lines(decode_unicode=True):
+            for raw_line in response.iter_lines(decode_unicode=True):
+                line = raw_line if isinstance(raw_line, str) else raw_line.decode("utf-8", "replace")
                 if not line or not line.startswith("data:"):
                     continue
                 data = line[5:].strip()
@@ -553,9 +556,9 @@ class ChatEngine:
     def send_message(
         self,
         text: str,
-        conversation_id: Optional[str] = None,
+        conversation_id: str | None = None,
         use_rag: bool = True,
-        attachment_paths: Optional[list[str]] = None,
+        attachment_paths: list[str] | None = None,
     ) -> str:
         """Send a user message and return the assistant's reply.
 
@@ -614,9 +617,9 @@ class ChatEngine:
     def send_message_stream(
         self,
         text: str,
-        conversation_id: Optional[str] = None,
+        conversation_id: str | None = None,
         use_rag: bool = True,
-        attachment_paths: Optional[list[str]] = None,
+        attachment_paths: list[str] | None = None,
     ) -> Any:
         """Streaming variant of :meth:`send_message`.
 
@@ -683,7 +686,7 @@ class ChatEngine:
             logger.error("Failed to persist chat messages: %s", exc)
 
 
-_engine: Optional[ChatEngine] = None
+_engine: ChatEngine | None = None
 _engine_lock = threading.Lock()
 
 

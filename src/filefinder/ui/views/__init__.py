@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-__all__ = ["SearchView", "ChatView", "IndexView", "SettingsView"]
+__all__ = ["ChatView", "IndexView", "SearchView", "SettingsView"]
 
 
 def __getattr__(name: str) -> Any:

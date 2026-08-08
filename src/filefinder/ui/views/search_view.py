@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import flet as ft
 
@@ -41,7 +41,7 @@ class SearchView(ft.Column):
             to the index view from the empty state).
     """
 
-    def __init__(self, app: "FileFinderApp") -> None:
+    def __init__(self, app: FileFinderApp) -> None:
         self._app = app
         self._selected_types: set[str] = set()
         self._searching = False
@@ -171,7 +171,7 @@ class SearchView(ft.Column):
                 asyncio.to_thread(self._maybe_upsell),
                 asyncio.to_thread(self._do_search, query),
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("Search failed")
             self._app.show_snackbar(t("search.error", error=exc), error=True)
             upsell, results = None, []
@@ -198,7 +198,7 @@ class SearchView(ft.Column):
     # Freemium: soft upsell + export gate
     # ------------------------------------------------------------------
 
-    def _maybe_upsell(self) -> Optional[str]:
+    def _maybe_upsell(self) -> str | None:
         """Bump the free-tier search counter (runs in a worker thread).
 
         Returns:
@@ -239,7 +239,7 @@ class SearchView(ft.Column):
             return
         try:
             await asyncio.to_thread(self._write_export, path, self._last_results)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("Export failed")
             self._app.show_snackbar(t("error.generic", error=exc), error=True)
             return
@@ -307,7 +307,7 @@ class SearchView(ft.Column):
         factory = getattr(search_core, "get_search_engine", None)
         engine = factory() if callable(factory) else search_core.SearchEngine()
 
-        filters: Optional[Any] = None
+        filters: Any | None = None
         if self._selected_types:
             extensions = sorted(
                 {ext for label in self._selected_types for ext in _CHIP_EXTENSIONS[label]}

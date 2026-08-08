@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Awaitable, Callable
+from collections.abc import Awaitable, Callable
 
 import flet as ft
 

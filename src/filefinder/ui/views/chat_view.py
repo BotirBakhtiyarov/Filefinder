@@ -5,12 +5,12 @@ from __future__ import annotations
 import asyncio
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional, Tuple
+from typing import TYPE_CHECKING, Any
 
 import flet as ft
 
-from filefinder.core.config import get_config, save_config, t
 from filefinder.core import chat as chat_core
+from filefinder.core.config import get_config, save_config, t
 from filefinder.ui import is_pro, kv_get, kv_set
 from filefinder.ui.components.chat_bubble import ChatBubble, split_thinking
 
@@ -23,7 +23,7 @@ _PROVIDERS = list(chat_core.PROVIDER_CHOICES)
 _KV_CONVERSATION = "current_conversation"
 
 
-def _normalize_history_item(item: Any) -> Tuple[str, str]:
+def _normalize_history_item(item: Any) -> tuple[str, str]:
     """Extract ``(role, content)`` from a chat history record.
 
     Tolerates dicts, tuples and ORM-like objects so the view works with the
@@ -48,11 +48,11 @@ class ChatView(ft.Column):
         app: owning :class:`FileFinderApp` (used for snackbars).
     """
 
-    def __init__(self, app: "FileFinderApp") -> None:
+    def __init__(self, app: FileFinderApp) -> None:
         self._app = app
         cfg = get_config()
         self._engine = self._create_engine()
-        self._conversation_id: Optional[str] = None
+        self._conversation_id: str | None = None
 
         self.provider_dropdown = ft.Dropdown(
             label=t("chat.provider"),
@@ -159,7 +159,7 @@ class ChatView(ft.Column):
         self.attach_button.visible = False
 
     @staticmethod
-    def _chat_quota_warning() -> Optional[str]:
+    def _chat_quota_warning() -> str | None:
         """Return the low-quota warning text for free users, if any.
 
         Reads ``chat_queries`` counter/limit from the license module;
@@ -200,7 +200,7 @@ class ChatView(ft.Column):
         """Return the active conversation id, creating one if necessary."""
         if self._conversation_id:
             return self._conversation_id
-        conv_id: Optional[str] = None
+        conv_id: str | None = None
         try:
             from filefinder.core.db import get_db
 
@@ -376,7 +376,7 @@ class ChatView(ft.Column):
         try:
             conv_id = await asyncio.to_thread(self._ensure_conversation_id)
             await asyncio.to_thread(_stream_worker)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("Chat send failed")
             self._app.show_snackbar(t("chat.error", error=exc), error=True)
             if not (bubble._text_control.value or ""):

@@ -13,8 +13,9 @@ from __future__ import annotations
 import logging
 import math
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from filefinder.core.config import get_model_dir, is_android
 
@@ -23,6 +24,10 @@ logger = logging.getLogger(__name__)
 # HuggingFace repos per platform.
 _HF_REPO_DESKTOP = "BAAI/bge-m3"
 _HF_REPO_ANDROID = "BAAI/bge-small-zh-v1.5"
+
+# Pinned model revisions (supply-chain safety; bandit B615).
+_HF_REVISION_DESKTOP = "5617a9f61b028005a4858fdac845db406aefb181"
+_HF_REVISION_ANDROID = "7999e1d3359715c523056ef9478215996d62a620"
 
 # Best-effort file filter for snapshot_download: tokenizer/config json files,
 # vocab/merges text files, and everything under onnx/ (where the quantized
@@ -59,7 +64,7 @@ class Embedder:
     def _model_dir(self) -> Path:
         return Path(get_model_dir())
 
-    def _find_model_onnx(self) -> Optional[Path]:
+    def _find_model_onnx(self) -> Path | None:
         """Locate the ONNX model file in the model directory.
 
         Accepts any ``*.onnx`` placed in the model dir (or its ``onnx/``
@@ -77,7 +82,7 @@ class Embedder:
         candidates.sort(key=lambda p: ("quantized" not in p.name.lower(), len(p.name)))
         return candidates[0]
 
-    def _find_tokenizer(self) -> Optional[Path]:
+    def _find_tokenizer(self) -> Path | None:
         tokenizer_path = self._model_dir() / "tokenizer.json"
         return tokenizer_path if tokenizer_path.is_file() else None
 
@@ -143,7 +148,7 @@ class Embedder:
                 tokenizer.enable_padding()
                 self._tokenizer = tokenizer
                 logger.info("Embedding model loaded from %s", model_path)
-            except Exception as exc:  # noqa: BLE001 - degrade gracefully
+            except Exception as exc:
                 self._load_failed = True
                 logger.error("Failed to load embedding model: %s", exc)
                 raise ModelNotAvailableError(
@@ -250,7 +255,7 @@ class Embedder:
     # ------------------------------------------------------------------
 
     def download_model(
-        self, progress_cb: Optional[Callable[[int, int], None]] = None
+        self, progress_cb: Callable[[int, int], None] | None = None
     ) -> None:
         """Download the embedding model from HuggingFace.
 
@@ -278,10 +283,13 @@ class Embedder:
             snapshot_path = Path(
                 snapshot_download(
                     repo_id=repo,
+                    revision=(
+                        _HF_REVISION_ANDROID if is_android() else _HF_REVISION_DESKTOP
+                    ),
                     allow_patterns=_ALLOW_PATTERNS,
                 )
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Model download failed: %s", exc)
             raise ModelNotAvailableError(f"Model download failed: {exc}") from exc
 
@@ -340,7 +348,7 @@ class Embedder:
             if progress_cb is not None:
                 progress_cb(1, 1)
             logger.info("Model files placed in %s", target_dir)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Failed to stage model files: %s", exc)
             raise ModelNotAvailableError(f"Failed to stage model files: {exc}") from exc
 
@@ -350,7 +358,7 @@ class Embedder:
             )
 
 
-_embedder: Optional[Embedder] = None
+_embedder: Embedder | None = None
 _embedder_lock = threading.Lock()
 
 

@@ -9,7 +9,6 @@ incremental (streaming) text updates.
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 import flet as ft
 
@@ -60,8 +59,8 @@ class ChatBubble(ft.Row):
     ) -> None:
         is_user = role == "user"
         self._think_label = think_label
-        self._think_tile: Optional[ft.ExpansionTile] = None
-        self._think_text: Optional[ft.Text] = None
+        self._think_tile: ft.ExpansionTile | None = None
+        self._think_text: ft.Text | None = None
 
         self._text_control = ft.Text(text, selectable=True, size=14)
         controls: list[ft.Control] = []
@@ -100,7 +99,7 @@ class ChatBubble(ft.Row):
         self._think_tile = ft.ExpansionTile(
             title=ft.Text(self._think_label, size=12, color=ft.Colors.OUTLINE),
             controls=[self._think_text],
-            initially_expanded=False,
+            expanded=False,
             dense=True,
             tile_padding=ft.Padding.all(0),
             controls_padding=ft.Padding.only(left=4, bottom=4),

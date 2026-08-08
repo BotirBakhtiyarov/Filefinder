@@ -16,8 +16,8 @@ from __future__ import annotations
 import logging
 import shutil
 import subprocess
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Callable, Optional, Sequence
 
 from filefinder.core import ocr
 from filefinder.core.config import get_app_data_dir, is_windows
@@ -64,7 +64,7 @@ def is_tesseract_installed() -> bool:
         return False
 
 
-def _emit_status(status_cb: Optional[StatusCallback], msg_key: str) -> None:
+def _emit_status(status_cb: StatusCallback | None, msg_key: str) -> None:
     """Invoke the UI status callback with an i18n key, best-effort."""
     if status_cb is None:
         return
@@ -113,7 +113,7 @@ def _install_via_winget() -> bool:
     return result.returncode == 0
 
 
-def _download_installer(progress_cb: Optional[ProgressCallback]) -> Optional[Path]:
+def _download_installer(progress_cb: ProgressCallback | None) -> Path | None:
     """Download the official Tesseract installer, trying mirrors in order.
 
     Args:
@@ -173,8 +173,8 @@ def _run_installer(installer: Path) -> bool:
 # ----------------------------------------------------------------------
 
 def ensure_tesseract(
-    progress_cb: Optional[ProgressCallback] = None,
-    status_cb: Optional[StatusCallback] = None,
+    progress_cb: ProgressCallback | None = None,
+    status_cb: StatusCallback | None = None,
 ) -> bool:
     """Ensure Tesseract OCR is installed (Windows only).
 
@@ -220,8 +220,8 @@ def ensure_tesseract(
         _emit_status(status_cb, "deps.status_langdata")
         ensure_language_data(progress_cb=progress_cb)
         return True
-    except Exception as exc:  # noqa: BLE001 - never raise to the UI
-        logger.exception("ensure_tesseract failed: %s", exc)
+    except Exception:
+        logger.exception("ensure_tesseract failed")
         return False
 
 
@@ -264,7 +264,7 @@ def _dir_writable(path: Path) -> bool:
         return False
 
 
-def _writable_tessdata_dir(primary: Path) -> Optional[Path]:
+def _writable_tessdata_dir(primary: Path) -> Path | None:
     """Pick a writable tessdata dir, falling back to the app data dir.
 
     When the tesseract installation lives in a protected location (e.g.
@@ -295,7 +295,7 @@ def _writable_tessdata_dir(primary: Path) -> Optional[Path]:
 
 def ensure_language_data(
     langs: Sequence[str] = DEFAULT_LANGS,
-    progress_cb: Optional[ProgressCallback] = None,
+    progress_cb: ProgressCallback | None = None,
 ) -> bool:
     """Ensure the given ``.traineddata`` files exist in the tessdata dir.
 
@@ -340,8 +340,8 @@ def ensure_language_data(
             logger.warning("Missing language data after install: %s", missing)
             return False
         return True
-    except Exception as exc:  # noqa: BLE001 - never raise to the UI
-        logger.exception("ensure_language_data failed: %s", exc)
+    except Exception:
+        logger.exception("ensure_language_data failed")
         return False
 
 
@@ -365,7 +365,7 @@ def get_poppler_install_dir() -> Path:
     return Path.home() / ".filefinder" / "poppler"
 
 
-def get_poppler_bin_dir() -> Optional[Path]:
+def get_poppler_bin_dir() -> Path | None:
     """Return the directory containing ``pdfinfo.exe``/``pdftoppm.exe``.
 
     Checks the managed install dir first (``Library/bin`` layout and the
@@ -389,7 +389,7 @@ def get_poppler_bin_dir() -> Optional[Path]:
     return None
 
 
-def _download_poppler(progress_cb: Optional[ProgressCallback]) -> Optional[Path]:
+def _download_poppler(progress_cb: ProgressCallback | None) -> Path | None:
     """Download the latest poppler-windows release zip from GitHub.
 
     Args:
@@ -426,7 +426,7 @@ def _download_poppler(progress_cb: Optional[ProgressCallback]) -> Optional[Path]
         return None
 
 
-def _extract_poppler(zip_path: Path) -> Optional[Path]:
+def _extract_poppler(zip_path: Path) -> Path | None:
     """Extract the poppler zip into the managed install dir.
 
     The zip contains a top-level ``poppler-XX/`` directory with
@@ -488,8 +488,8 @@ def _verify_poppler(bin_dir: Path) -> bool:
 
 
 def ensure_poppler(
-    progress_cb: Optional[ProgressCallback] = None,
-    status_cb: Optional[StatusCallback] = None,
+    progress_cb: ProgressCallback | None = None,
+    status_cb: StatusCallback | None = None,
 ) -> bool:
     """Ensure poppler (pdfinfo/pdftoppm) is installed (Windows only).
 
@@ -524,14 +524,14 @@ def ensure_poppler(
             logger.error("Poppler verification failed after install.")
             return False
         return True
-    except Exception as exc:  # noqa: BLE001 - never raise to the UI
-        logger.exception("ensure_poppler failed: %s", exc)
+    except Exception:
+        logger.exception("ensure_poppler failed")
         return False
 
 
 def ensure_pdf_ocr(
-    progress_cb: Optional[ProgressCallback] = None,
-    status_cb: Optional[StatusCallback] = None,
+    progress_cb: ProgressCallback | None = None,
+    status_cb: StatusCallback | None = None,
 ) -> bool:
     """Ensure everything needed for PDF OCR: Tesseract + poppler.
 

@@ -36,7 +36,7 @@ import subprocess
 import uuid
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from filefinder.core import config, constants
 
@@ -125,7 +125,7 @@ def validate_checksum(key: str) -> bool:
     return hmac.compare_digest(g3, _checksum_group(g1, g2))
 
 
-def generate_key(expiry: Optional[date] = None) -> str:
+def generate_key(expiry: date | None = None) -> str:
     """Generate a new random license key with a valid checksum.
 
     Args:
@@ -160,7 +160,7 @@ def _encode_month(d: date) -> str:
     return ALPHABET[month_index // 32] + ALPHABET[month_index % 32]
 
 
-def _decode_month(g1: str) -> Optional[date]:
+def _decode_month(g1: str) -> date | None:
     """Decode the first 2 chars of ``g1`` into the last day of that month.
 
     Returns None when ``g1`` is malformed.
@@ -173,7 +173,7 @@ def _decode_month(g1: str) -> Optional[date]:
     return date(year, month, calendar.monthrange(year, month)[1])
 
 
-def get_key_expiry(key: str) -> Optional[date]:
+def get_key_expiry(key: str) -> date | None:
     """Return the expiry date encoded in ``key`` (last day of the month).
 
     The key is valid THROUGH THE END of that month (local date). Returns
@@ -213,11 +213,12 @@ def is_blacklisted(key: str) -> bool:
 # Device id
 # ----------------------------------------------------------------------
 
-def _run_powershell(command: str) -> Optional[str]:
+def _run_powershell(command: str) -> str | None:
     """Run a PowerShell command and return its trimmed stdout, or None."""
     try:
         result = subprocess.run(
             ["powershell", "-NoProfile", "-Command", command],
+            check=False,
             capture_output=True,
             text=True,
             timeout=20,
@@ -232,7 +233,7 @@ def _run_powershell(command: str) -> Optional[str]:
     return output or None
 
 
-def _windows_device_id() -> Optional[str]:
+def _windows_device_id() -> str | None:
     """Hash of CPU ProcessorId + disk SerialNumber, or None on failure."""
     cpu = _run_powershell("(Get-CimInstance Win32_Processor).ProcessorId")
     disk = _run_powershell("(Get-CimInstance Win32_DiskDrive).SerialNumber")
@@ -292,7 +293,7 @@ def _license_path() -> Path:
     return config.get_app_data_dir() / LICENSE_FILENAME
 
 
-def _load_license() -> Optional[dict[str, Any]]:
+def _load_license() -> dict[str, Any] | None:
     """Load the persisted license record, or None when missing/corrupt."""
     path = _license_path()
     try:
@@ -451,7 +452,7 @@ def get_status() -> dict[str, Any]:
 # Tier limits & usage counters
 # ----------------------------------------------------------------------
 
-def get_limit(name: str) -> Optional[int]:
+def get_limit(name: str) -> int | None:
     """Return the numeric limit ``name`` for the current tier.
 
     Returns:

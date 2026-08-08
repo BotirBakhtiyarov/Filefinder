@@ -12,7 +12,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +26,14 @@ _WINDOWS_TESSERACT = r"C:/Program Files/Tesseract-OCR/tesseract.exe"
 # Cached resolution result (only successful resolutions are cached, so a
 # just-installed tesseract is picked up on the next lookup even without an
 # explicit :func:`reset_resolution`).
-_resolved_cmd: Optional[str] = None
+_resolved_cmd: str | None = None
 
 
 # ----------------------------------------------------------------------
 # Tesseract binary / data discovery
 # ----------------------------------------------------------------------
 
-def _resolve_tesseract_cmd() -> Optional[str]:
+def _resolve_tesseract_cmd() -> str | None:
     """Locate the tesseract executable.
 
     Resolution order: ``TESSERACT_CMD`` environment variable, ``PATH``
@@ -47,7 +47,7 @@ def _resolve_tesseract_cmd() -> Optional[str]:
     global _resolved_cmd
     if _resolved_cmd is not None:
         return _resolved_cmd
-    cmd: Optional[str] = None
+    cmd: str | None = None
     env_cmd = os.environ.get("TESSERACT_CMD", "").strip()
     if env_cmd and Path(env_cmd).is_file():
         cmd = env_cmd
@@ -79,7 +79,7 @@ def reset_resolution() -> None:
     _resolved_cmd = None
 
 
-def get_tesseract_cmd() -> Optional[str]:
+def get_tesseract_cmd() -> str | None:
     """Return the resolved tesseract executable path, or ``None``."""
     return _resolve_tesseract_cmd()
 
@@ -126,8 +126,8 @@ def check_tesseract_data() -> dict[str, bool]:
     # land there when the system dir is not writable).
     user_dir = get_tessdata_dir()
     if user_dir is not None:
-        for lang in result:
-            if not result[lang]:
+        for lang, present in result.items():
+            if not present:
                 result[lang] = (user_dir / f"{lang}.traineddata").is_file()
     return result
 
@@ -216,7 +216,7 @@ def _preprocess(image: Any) -> Any:
 # ----------------------------------------------------------------------
 
 
-def get_tessdata_dir() -> Optional[Path]:
+def get_tessdata_dir() -> Path | None:
     """Return the user-level tessdata dir when it holds traineddata files.
 
     Language packs downloaded by :mod:`filefinder.core.deps` land in
@@ -307,7 +307,7 @@ def extract_text_from_pdf(path: str) -> str:
         logger.info("pdf2image not installed; PDF OCR disabled.")
         return ""
     try:
-        poppler_path: Optional[str] = None
+        poppler_path: str | None = None
         try:
             from filefinder.core import deps  # lazy import
 

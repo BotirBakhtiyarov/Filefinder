@@ -13,11 +13,12 @@ FTS content) and only vector chunks are skipped, with a warning logged.
 from __future__ import annotations
 
 import hashlib
+import itertools
 import logging
 import os
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from filefinder.core import constants
 from filefinder.core.config import get_config
@@ -48,7 +49,7 @@ def _is_hidden(name: str) -> bool:
 
 def scan_directory(
     path: str,
-    extensions: Optional[set[str]] = None,
+    extensions: set[str] | None = None,
 ) -> list[str]:
     """Recursively collect supported files under ``path``.
 
@@ -101,7 +102,7 @@ def _content_hash(path: str) -> str:
     Returns:
         Lowercase hex digest string.
     """
-    digest = hashlib.md5()
+    digest = hashlib.md5(usedforsecurity=False)
     with open(path, "rb") as handle:
         while True:
             block = handle.read(_HASH_BLOCK_SIZE)
@@ -172,7 +173,7 @@ def chunk_text(
     # packing produced no natural overlap (paragraph-packed chunks).
     if overlap > 0 and len(chunks) > 1:
         overlapped = [chunks[0]]
-        for previous, chunk in zip(chunks, chunks[1:]):
+        for previous, chunk in itertools.pairwise(chunks):
             prefix = previous[-overlap:]
             merged = prefix + chunk
             overlapped.append(merged if len(merged) <= chunk_size + overlap else chunk)
@@ -285,7 +286,7 @@ def index_file(path: str) -> bool:
     except UnsupportedFileError:
         logger.debug("Skipping unsupported file: %s", path)
         return False
-    except Exception as exc:  # noqa: BLE001 - counted as failure upstream
+    except Exception as exc:
         logger.error("Failed to process %s: %s", path, exc)
         raise
 
@@ -346,7 +347,7 @@ def index_file(path: str) -> bool:
             exc, path,
         )
         return True
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         logger.error("Embedding failed for %s: %s", path, exc)
         raise
 
@@ -357,8 +358,8 @@ def index_file(path: str) -> bool:
 
 def index_directories(
     dirs: list[str],
-    progress_cb: Optional[ProgressCallback] = None,
-    cancel_event: Optional[threading.Event] = None,
+    progress_cb: ProgressCallback | None = None,
+    cancel_event: threading.Event | None = None,
 ) -> dict:
     """Index every supported file under the given directories.
 
@@ -432,8 +433,8 @@ def remove_file(path: str) -> bool:
 
 
 def reindex_all(
-    progress_cb: Optional[ProgressCallback] = None,
-    cancel_event: Optional[threading.Event] = None,
+    progress_cb: ProgressCallback | None = None,
+    cancel_event: threading.Event | None = None,
 ) -> dict:
     """Clear the whole index and re-index all monitored directories.
 

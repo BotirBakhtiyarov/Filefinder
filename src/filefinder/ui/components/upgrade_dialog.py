@@ -18,7 +18,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import flet as ft
 
@@ -71,8 +72,8 @@ def format_license_key(raw: str) -> str:
 
 async def show_upgrade_dialog(
     page: ft.Page,
-    feature_key: Optional[str] = None,
-    on_activated: Optional[Callable[[], Any]] = None,
+    feature_key: str | None = None,
+    on_activated: Callable[[], Any] | None = None,
 ) -> None:
     """Show the Pro upgrade / license activation dialog.
 

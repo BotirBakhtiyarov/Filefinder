@@ -7,7 +7,7 @@ import logging
 import shutil
 import tempfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING
 
 import flet as ft
 
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 _LANGUAGES = {"zh": "简体中文", "uz": "Oʻzbek", "en": "English"}
 
-from filefinder.core import chat as chat_core  # noqa: E402
+from filefinder.core import chat as chat_core
 
 _PROVIDERS = list(chat_core.PROVIDER_CHOICES)
 _PROVIDER_LABELS = chat_core.PROVIDER_LABELS
@@ -75,12 +75,12 @@ class SettingsView(ft.Column):
         app: owning :class:`FileFinderApp` (language switching, snackbars).
     """
 
-    def __init__(self, app: "FileFinderApp") -> None:
+    def __init__(self, app: FileFinderApp) -> None:
         self._app = app
         cfg = get_config()
 
         # --- License / Pro ------------------------------------------
-        self._license_section: Optional[ft.Card] = self._build_license_section()
+        self._license_section: ft.Card | None = self._build_license_section()
 
         # --- General -------------------------------------------------
         self.language_dropdown = ft.Dropdown(
@@ -243,7 +243,7 @@ class SettingsView(ft.Column):
     # License / Pro
     # ------------------------------------------------------------------
 
-    def _build_license_section(self) -> Optional[ft.Card]:
+    def _build_license_section(self) -> ft.Card | None:
         """Build the license section card, or None when licensing is off.
 
         Returns None when ``filefinder.core.license`` is unavailable so
@@ -280,7 +280,7 @@ class SettingsView(ft.Column):
                     )
                 )
             controls.append(upgrade_button)
-            return controls
+            return list(controls)
         activated_at = status.get("activated_at") or "-"
         device_id = status.get("device_id") or "-"
         expires_at = status.get("expires_at") or "-"

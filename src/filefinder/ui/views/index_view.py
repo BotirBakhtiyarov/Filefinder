@@ -6,7 +6,7 @@ import asyncio
 import logging
 import threading
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 import flet as ft
 
@@ -60,7 +60,7 @@ class IndexView(ft.Column):
         app: owning :class:`FileFinderApp` (used for snackbars and dialogs).
     """
 
-    def __init__(self, app: "FileFinderApp") -> None:
+    def __init__(self, app: FileFinderApp) -> None:
         self._app = app
         self._cancel_event = threading.Event()
         self._indexing = False
@@ -220,9 +220,12 @@ class IndexView(ft.Column):
         cfg = get_config()
         if path not in cfg.monitored_dirs:
             # Free tier: a single monitored folder; the 2nd one is Pro.
-            if not is_pro() and len(cfg.monitored_dirs) >= _watch_limit():
-                if not self._app.require_pro("watch"):
-                    return
+            if (
+                not is_pro()
+                and len(cfg.monitored_dirs) >= _watch_limit()
+                and not self._app.require_pro("watch")
+            ):
+                return
             cfg.monitored_dirs.append(path)
             try:
                 save_config(cfg)
@@ -293,7 +296,7 @@ class IndexView(ft.Column):
                     )
                 else:
                     self._app.show_snackbar(t("index.done"))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.exception("Indexing failed")
             self._app.show_snackbar(t("index.failed", error=exc), error=True)
         finally:

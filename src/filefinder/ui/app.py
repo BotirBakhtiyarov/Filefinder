@@ -11,7 +11,6 @@ from __future__ import annotations
 import asyncio
 import logging
 import threading
-from typing import Optional
 
 import flet as ft
 
@@ -37,7 +36,7 @@ _VIEW_COUNT = 4  # search, chat, index, settings
 _WELCOME_SLIDES = 5
 
 
-def _icon_path(name: str = "app_icon.png") -> Optional[str]:
+def _icon_path(name: str = "app_icon.png") -> str | None:
     """Return the absolute path of an app icon, or None when missing."""
     try:
         from filefinder.core.config import get_assets_dir
@@ -52,12 +51,12 @@ class FileFinderApp:
     """Root application controller for the Flet UI."""
 
     def __init__(self) -> None:
-        self.page: Optional[ft.Page] = None
+        self.page: ft.Page | None = None
         self._views: dict[int, ft.Control] = {}
         self._current_index = 0
         self._is_mobile = False
-        self._content: Optional[ft.Container] = None
-        self._nav: Optional[ft.Control] = None
+        self._content: ft.Container | None = None
+        self._nav: ft.Control | None = None
         self._tray: object = None
         self._hotkey: object = None
         self._lock = threading.Lock()
@@ -295,8 +294,10 @@ class FileFinderApp:
         await self.navigate_to(int(e.control.selected_index))
 
     async def _on_resize(self, e: ft.ControlEvent) -> None:
-        width = getattr(e, "width", None) or (
-            self.page.window.width if self.page else _WINDOW_WIDTH
+        width = (
+            getattr(e, "width", None)
+            or (self.page.window.width if self.page else None)
+            or _WINDOW_WIDTH
         )
         is_mobile = width < _DESKTOP_MIN_WIDTH
         if is_mobile != self._is_mobile:

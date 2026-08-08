@@ -16,8 +16,9 @@ from __future__ import annotations
 import logging
 import math
 import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable, Optional
+from typing import Any
 
 from filefinder.core.config import get_model_dir
 from filefinder.core.constants import (
@@ -60,6 +61,10 @@ _VISION_ALLOW_PATTERNS = [
 _TEXT_ONNX_NAME = "text_model.onnx"
 _VISION_ONNX_NAME = "vision_model.onnx"
 _TOKENIZER_NAME = "tokenizer.json"
+# Pinned model revisions (supply-chain safety; bandit B615).
+_TEXT_REVISION = "58edf8cada9e398793dca955574a48cbb7f18be2"
+_VISION_REVISION = "d15189d7028b43f1d3e65039190477f6af591c2a"
+
 # 768→512 linear projection applied after mean-pooling the text tower
 # (the sentence-transformers ONNX export only contains the transformer).
 _DENSE_NAME = "dense.safetensors"
@@ -93,22 +98,22 @@ class ImageEmbedder:
     def _model_dir(self) -> Path:
         return get_clip_model_dir()
 
-    def _find_text_model(self) -> Optional[Path]:
+    def _find_text_model(self) -> Path | None:
         """Locate the CLIP text-tower ONNX file, or None."""
         path = self._model_dir() / _TEXT_ONNX_NAME
         return path if path.is_file() else None
 
-    def _find_vision_model(self) -> Optional[Path]:
+    def _find_vision_model(self) -> Path | None:
         """Locate the CLIP vision-tower ONNX file, or None."""
         path = self._model_dir() / _VISION_ONNX_NAME
         return path if path.is_file() else None
 
-    def _find_tokenizer(self) -> Optional[Path]:
+    def _find_tokenizer(self) -> Path | None:
         """Locate the CLIP tokenizer.json, or None."""
         path = self._model_dir() / _TOKENIZER_NAME
         return path if path.is_file() else None
 
-    def _find_dense(self) -> Optional[Path]:
+    def _find_dense(self) -> Path | None:
         """Locate the text projection (Dense) weights file, or None."""
         path = self._model_dir() / _DENSE_NAME
         return path if path.is_file() else None
@@ -184,7 +189,7 @@ class ImageEmbedder:
                 tokenizer.enable_padding()
                 self._tokenizer = tokenizer
                 logger.info("CLIP model loaded from %s", self._model_dir())
-            except Exception as exc:  # noqa: BLE001 - degrade gracefully
+            except Exception as exc:
                 self._load_failed = True
                 logger.error("Failed to load CLIP model: %s", exc)
                 raise ModelNotAvailableError(
@@ -265,7 +270,7 @@ class ImageEmbedder:
         else:
             new_height = _IMAGE_SIZE
             new_width = max(1, round(width * _IMAGE_SIZE / height))
-        img = img.resize((new_width, new_height), Image.BICUBIC)
+        img = img.resize((new_width, new_height), getattr(Image, 'Resampling', Image).BICUBIC)
 
         left = (img.size[0] - _IMAGE_SIZE) // 2
         top = (img.size[1] - _IMAGE_SIZE) // 2
@@ -329,7 +334,7 @@ class ImageEmbedder:
             ).tolist()
         return self._normalize([float(v) for v in vector])
 
-    def embed_image(self, path: str) -> Optional[list[float]]:
+    def embed_image(self, path: str) -> list[float] | None:
         """Embed a single image file with the CLIP vision tower.
 
         Args:
@@ -341,7 +346,7 @@ class ImageEmbedder:
         """
         return self.embed_images([path])[0]
 
-    def embed_images(self, paths: list[str]) -> list[Optional[list[float]]]:
+    def embed_images(self, paths: list[str]) -> list[list[float] | None]:
         """Embed a batch of image files with the CLIP vision tower.
 
         Per-image errors are logged and yield None at that position instead
@@ -363,7 +368,7 @@ class ImageEmbedder:
         import numpy as np  # local import; numpy is a hard dep of onnxruntime
         from PIL import Image  # lazy heavy import
 
-        results: list[Optional[list[float]]] = [None] * len(paths)
+        results: list[list[float] | None] = [None] * len(paths)
         tensors: list[Any] = []
         positions: list[int] = []
         for index, path in enumerate(paths):
@@ -392,7 +397,7 @@ class ImageEmbedder:
     # ------------------------------------------------------------------
 
     def download_model(
-        self, progress_cb: Optional[Callable[[int, int], None]] = None
+        self, progress_cb: Callable[[int, int], None] | None = None
     ) -> None:
         """Download the CLIP text and vision towers from HuggingFace.
 
@@ -422,6 +427,7 @@ class ImageEmbedder:
             text_snapshot = Path(
                 snapshot_download(
                     repo_id=CLIP_TEXT_REPO,
+                    revision=_TEXT_REVISION,
                     allow_patterns=_TEXT_ALLOW_PATTERNS,
                 )
             )
@@ -431,10 +437,11 @@ class ImageEmbedder:
             vision_snapshot = Path(
                 snapshot_download(
                     repo_id=CLIP_VISION_REPO,
+                    revision=_VISION_REVISION,
                     allow_patterns=_VISION_ALLOW_PATTERNS,
                 )
             )
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("CLIP model download failed: %s", exc)
             raise ModelNotAvailableError(
                 f"CLIP model download failed: {exc}"
@@ -492,7 +499,7 @@ class ImageEmbedder:
             logger.info("CLIP model files placed in %s", target_dir)
         except ModelNotAvailableError:
             raise
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error("Failed to stage CLIP model files: %s", exc)
             raise ModelNotAvailableError(
                 f"Failed to stage CLIP model files: {exc}"
@@ -504,7 +511,7 @@ class ImageEmbedder:
             )
 
     @staticmethod
-    def _pick_onnx(snapshot_dir: Path, candidates: list[str]) -> Optional[Path]:
+    def _pick_onnx(snapshot_dir: Path, candidates: list[str]) -> Path | None:
         """Return the first existing ONNX path among relative candidates."""
         for relative in candidates:
             path = snapshot_dir / relative
@@ -535,7 +542,7 @@ class ImageEmbedder:
                     pass
 
 
-_image_embedder: Optional[ImageEmbedder] = None
+_image_embedder: ImageEmbedder | None = None
 _image_embedder_lock = threading.Lock()
 
 

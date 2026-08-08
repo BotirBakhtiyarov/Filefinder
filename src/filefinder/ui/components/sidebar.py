@@ -7,7 +7,7 @@ Returns a :class:`ft.NavigationRail` for desktop layouts or a
 from __future__ import annotations
 
 import logging
-from typing import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 
 import flet as ft
 

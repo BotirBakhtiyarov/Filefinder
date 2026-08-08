@@ -13,7 +13,7 @@ import logging
 import re
 import threading
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 from filefinder.core import constants
 from filefinder.core.db import get_db, get_image_vector_store, get_vector_store
@@ -42,12 +42,12 @@ class SearchResult:
 class SearchFilters:
     """Optional post-hoc filters applied to candidate results."""
 
-    file_types: Optional[list[str]] = None
-    date_from: Optional[float] = None
-    date_to: Optional[float] = None
-    directory: Optional[str] = None
-    min_size: Optional[int] = None
-    max_size: Optional[int] = None
+    file_types: list[str] | None = None
+    date_from: float | None = None
+    date_to: float | None = None
+    directory: str | None = None
+    min_size: int | None = None
+    max_size: int | None = None
 
     def matches(self, row: dict[str, Any]) -> bool:
         """Return True if a file row passes all configured filters."""
@@ -69,9 +69,7 @@ class SearchFilters:
         size = int(row.get("size") or 0)
         if self.min_size is not None and size < self.min_size:
             return False
-        if self.max_size is not None and size > self.max_size:
-            return False
-        return True
+        return not (self.max_size is not None and size > self.max_size)
 
 
 # Spec/legacy alias: the design spec calls the filters dataclass ``Filters``.
@@ -82,7 +80,7 @@ Filters = SearchFilters
 # Defensive helpers over the Database facade / vector store
 # ----------------------------------------------------------------------
 
-def _row_to_dict(row: Any) -> Optional[dict[str, Any]]:
+def _row_to_dict(row: Any) -> dict[str, Any] | None:
     """Best-effort conversion of a db row (dict, sqlite3.Row) to a dict."""
     if row is None:
         return None
@@ -110,7 +108,7 @@ def _get_connection(db: Any) -> Any:
     return None
 
 
-def _get_file_by_id(db: Any, file_id: Any) -> Optional[dict[str, Any]]:
+def _get_file_by_id(db: Any, file_id: Any) -> dict[str, Any] | None:
     """Fetch a file row by primary key, via facade or raw SQL fallback."""
     getter = getattr(db, "get_file_by_id", None)
     if callable(getter):
@@ -134,7 +132,7 @@ def _get_file_by_id(db: Any, file_id: Any) -> Optional[dict[str, Any]]:
         return None
 
 
-def _get_chunk_content(db: Any, file_id: Any, chunk_index: int) -> Optional[str]:
+def _get_chunk_content(db: Any, file_id: Any, chunk_index: int) -> str | None:
     """Fetch a chunk's text, via facade or raw SQL fallback."""
     for name in ("get_chunk_content", "get_chunk"):
         getter = getattr(db, name, None)
@@ -163,7 +161,7 @@ def _get_chunk_content(db: Any, file_id: Any, chunk_index: int) -> Optional[str]
         return None
 
 
-def _parse_embedding_id(embedding_id: Any) -> Optional[tuple[Any, int]]:
+def _parse_embedding_id(embedding_id: Any) -> tuple[Any, int] | None:
     """Parse an embedding id of the form ``'<file_id>:<chunk_index>'``."""
     match = re.match(r"^(?P<file>.+):(?P<chunk>\d+)$", str(embedding_id))
     if not match:
@@ -189,7 +187,7 @@ class SearchEngine:
 
     def _semantic_scores(
         self, query: str, top_k: int
-    ) -> Optional[dict[str, tuple[float, str]]]:
+    ) -> dict[str, tuple[float, str]] | None:
         """Return ``{path: (score, snippet)}`` or None if unavailable."""
         try:
             embedding = get_embedder().embed_text(query)
@@ -238,7 +236,7 @@ class SearchEngine:
 
     def _image_scores(
         self, query: str, top_k: int
-    ) -> Optional[dict[str, tuple[float, str, dict[str, Any]]]]:
+    ) -> dict[str, tuple[float, str, dict[str, Any]]] | None:
         """Return ``{path: (score, snippet, row)}`` for image hits, or None.
 
         CLIP cosine similarities are used as-is (they are already roughly
@@ -347,7 +345,7 @@ class SearchEngine:
     def search(
         self,
         query: str,
-        filters: Optional[SearchFilters] = None,
+        filters: SearchFilters | None = None,
         top_k: int = constants.TOP_K,
     ) -> list[SearchResult]:
         """Run a hybrid search and return merged, filtered results.
@@ -427,7 +425,7 @@ class SearchEngine:
         return results[:top_k]
 
 
-_engine: Optional[SearchEngine] = None
+_engine: SearchEngine | None = None
 _engine_lock = threading.Lock()
 
 

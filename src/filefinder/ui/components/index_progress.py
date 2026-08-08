@@ -8,7 +8,7 @@ worker thread (marshalled via ``page.run_task`` by the caller).
 from __future__ import annotations
 
 import logging
-from typing import Awaitable, Callable, Optional
+from collections.abc import Awaitable, Callable
 
 import flet as ft
 
@@ -27,7 +27,7 @@ class IndexProgress(ft.Column):
 
     def __init__(
         self,
-        on_cancel: Optional[Callable[[ft.ControlEvent], Awaitable[None]]] = None,
+        on_cancel: Callable[[ft.ControlEvent], Awaitable[None]] | None = None,
         cancel_label: str = "Cancel",
         status_template: str = "{current}/{total} — {filename}",
     ) -> None:

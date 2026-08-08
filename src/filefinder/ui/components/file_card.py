@@ -12,14 +12,15 @@ import logging
 import os
 import subprocess
 import sys
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 import flet as ft
 
 logger = logging.getLogger(__name__)
 
 # Extension -> icon mapping (Material icons via ft.Icons).
-_ICON_BY_EXT: dict[str, str] = {
+_ICON_BY_EXT: dict[str, Any] = {
     ".pdf": ft.Icons.PICTURE_AS_PDF,
     ".docx": ft.Icons.DESCRIPTION,
     ".doc": ft.Icons.DESCRIPTION,
@@ -93,7 +94,7 @@ class FileCard(ft.Card):
         self,
         result: Any,
         open_label: str = "Open",
-        on_error: Optional[Callable[[str], None]] = None,
+        on_error: Callable[[str], None] | None = None,
     ) -> None:
         self._on_error = on_error
         if isinstance(result, dict):

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import inspect
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ def is_pro() -> bool:
         return True
 
 
-def kv_get(db: Any, key: str, default: Optional[str] = None) -> Optional[str]:
+def kv_get(db: Any, key: str, default: str | None = None) -> str | None:
     """Read a value from the database ``kv`` table.
 
     The exact accessor name on the ``Database`` facade is not fixed by the
