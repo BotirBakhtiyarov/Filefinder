@@ -1,65 +1,96 @@
-# FileFinder v3
+# FileFinder
 
-Cross-platform (Windows / Linux / Android) **semantic file search + RAG chat** desktop
-application built with [Flet](https://flet.dev) (Flutter for Python). Everything runs
-in a single process — no local HTTP server.
+**AI-powered semantic file search and chat for your local files.**
+Find any document by meaning, find any photo by describing what's in it, and chat with your files — all on your own machine.
 
-## Features
+![FileFinder Search](screenshots/search.png)
 
-- **Hybrid search** — semantic vector search (BGE embeddings, ONNX) combined with
-  SQLite FTS5 keyword search (`0.7 * semantic + 0.3 * keyword`).
-- **RAG chat** — chat with your files through a local Ollama model or the DeepSeek
-  API; retrieved chunks are injected as context.
-- **Broad file support** — txt, md, docx, xlsx, pptx, pdf (with OCR fallback), and
-  images (jpg/jpeg/png/bmp) via Tesseract OCR.
-- **Background indexing** — watchdog-based live re-indexing, cooperative cancel,
-  per-file failure isolation.
-- **Auto-update** — checks GitHub Releases, downloads and installs updates in-app.
-- **i18n** — Chinese (default), Uzbek, English.
-- **Cross-platform** — Windows and Linux in Phase 1; Android behind abstractions
-  (sqlite-vec vector store) in Phase 2.
+[![Release](https://img.shields.io/github/v/release/BotirBakhtiyarov/Filefinder)](https://github.com/BotirBakhtiyarov/Filefinder/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue)](https://github.com/BotirBakhtiyarov/Filefinder/releases)
+[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-## Install
+---
+
+## ✨ Features
+
+- **🔍 Semantic search** — search documents (DOCX, PDF, TXT, XLSX, PPTX, MD) by *meaning*, not just keywords (BGE-m3 embeddings + hybrid keyword score)
+- **🖼️ Image content search** — describe what's *in* a photo ("red car", "id card") and find it — CLIP vision-language model, multilingual (English / 中文 / O'zbek)
+- **📝 OCR built-in** — text from images and scanned PDFs (Tesseract `chi_sim+eng`), **auto-installed** on first run with poppler
+- **💬 Chat with your files** — RAG chat with streaming responses and collapsible thinking blocks; attach files with the `+` button (DeepSeek Cloud built-in, Ollama, or Custom)
+- **👁️ Automatic indexing** — standard user folders + all fixed drives indexed automatically on launch; live file watching keeps everything in sync
+- **🌐 3 languages** — 中文 / O'zbek / English UI
+- **🌙 Dark & Light themes**, system tray with global hotkey (`Alt+Q`)
+- **🔄 Auto-update** — new versions are delivered via GitHub Releases
+- **🔒 Private by design** — all indexing and embeddings run locally; nothing leaves your machine except the LLM chat API call you choose
+
+## 📸 Screenshots
+
+| Chat with files (RAG) | Index management |
+|---|---|
+| ![Chat](screenshots/chat.png) | ![Index](screenshots/index.png) |
+
+| Settings & Pro license |
+|---|
+| ![Settings](screenshots/settings.png) |
+
+## ⬇️ Download
+
+Get the latest release from the [**Releases page**](https://github.com/BotirBakhtiyarov/Filefinder/releases):
+
+| Package | When to use |
+|---|---|
+| `FileFinder-Setup-x.y.z.exe` | Standard installer for most Windows PCs |
+| `FileFinder-x.y.z.zip` | PCs with **Smart App Control** enabled (signed-Python setup, no unsigned executables) |
+| `FileFinder-vX.Y.Z-windows.zip` | Used by the in-app auto-updater |
+
+**First launch is fully automatic**: embedding models (BGE + CLIP) download themselves, Tesseract OCR and poppler install themselves, your standard folders are indexed in the background. No manual setup.
+
+## 💎 Free vs Pro
+
+| | Free | 💎 Pro (¥19.9/month) |
+|---|---|---|
+| Semantic file search | ✅ Unlimited | ✅ Unlimited |
+| Image content search | ✅ Unlimited | ✅ Unlimited |
+| OCR | ✅ Unlimited | ✅ Unlimited |
+| File indexing | ✅ Unlimited | ✅ Unlimited |
+| AI Chat (DeepSeek Cloud built-in) | 20 queries | ✅ Unlimited |
+| RAG chat + file attachments | — | ✅ |
+| Export results (CSV/Excel) | — | ✅ |
+| Watched folders | 1 | ✅ Up to 20 |
+
+**Activate Pro**: open Settings → upgrade → pay with WeChat Pay or Alipay (QR code in the app), then enter your activation key (`FF3-XXXX-XXXX-XXXX`).
+
+## 🚀 Run from source
 
 ```bash
-# with Poetry (recommended)
-poetry install
-
-# or plain pip (editable install)
-pip install -e .
+git clone https://github.com/BotirBakhtiyarov/Filefinder.git
+cd Filefinder
+python -m venv .venv && .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python -m filefinder.main
 ```
 
-## Run
+Run the tests:
 
 ```bash
-flet run
-# or
-python -m filefinder.main
+.venv\Scripts\python -m pytest tests/ -q
 ```
 
-## Build
+## 🛠 Tech stack
 
-```bash
-flet build windows   # Windows installer/app
-flet build linux     # Linux bundle
-flet build apk       # Android (Phase 2)
-```
+| Area | Technology |
+|---|---|
+| UI | [Flet](https://flet.dev) (Flutter for Python) |
+| Text embeddings | BAAI/bge-m3 (ONNX Runtime, ~2.3 GB, auto-downloaded) |
+| Image embeddings | CLIP ViT-B/32 multilingual (ONNX, auto-downloaded) |
+| OCR | Tesseract (`chi_sim+eng`) + poppler — auto-installed |
+| Vector store | ChromaDB (desktop) / sqlite-vec (Android, planned) |
+| LLM | DeepSeek (built-in cloud), Ollama, custom OpenAI-compatible |
+| Packaging | flet build + Inno Setup / SAC-safe zip |
 
-## Tech stack
+## 🔐 Privacy
 
-| Component        | Technology                                   |
-|------------------|----------------------------------------------|
-| UI               | Flet (Flutter for Python)                    |
-| Embeddings       | BGE-M3 / bge-small-zh via ONNX Runtime       |
-| Vector store     | ChromaDB (desktop), sqlite-vec (Android)     |
-| Keyword search   | SQLite FTS5 (bm25)                           |
-| OCR              | Tesseract (pytesseract) + Pillow/pdf2image   |
-| File parsing     | pdfplumber, python-docx, openpyxl, python-pptx |
-| File watching    | watchdog                                     |
-| LLM providers    | Ollama (local), DeepSeek (API)               |
-| Updates          | GitHub Releases API                          |
-| Config security  | cryptography (Fernet, machine-bound key)     |
+FileFinder indexes your files **locally**. OCR results, embeddings and the search index never leave your computer. The only outbound calls are: model downloads (HuggingFace), update checks (GitHub), and the chat API you configure (DeepSeek/Ollama/custom).
 
-## Author
+## 👤 Author
 
-Botir Bakhtiyarov — https://github.com/BotirBakhtiyarov/Filefinder
+**Botir Bakhtiyarov** — [GitHub](https://github.com/BotirBakhtiyarov) · WeChat: `nick_2620`
