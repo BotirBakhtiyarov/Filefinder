@@ -456,6 +456,11 @@ class ChatEngine:
                 chunk = payload.get("response", "")
                 if chunk:
                     yield str(chunk)
+                # Newer Ollama puts reasoning in a separate "thinking" field
+                # (deepseek-r1, qwen3) instead of inline <think> tags.
+                thinking = payload.get("thinking", "")
+                if thinking:
+                    yield ("think", str(thinking))
 
     def _stream_openai_compatible(
         self, prompt: str, api_url: str, model: str, api_key: str
