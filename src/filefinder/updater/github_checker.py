@@ -87,6 +87,35 @@ def _fetch_sha256(asset: dict[str, Any]) -> str | None:
     return match.group().lower()
 
 
+def _select_zip_asset(
+    assets: list[dict[str, Any]], version: str, suffix: str
+) -> dict[str, Any] | None:
+    """Pick the right zip asset for this installation type.
+
+    Frozen (flet build) installs use ``FileFinder-v{ver}-{platform}.zip``
+    (the full exe bundle). Source/zip (python) installs must instead take
+    the SAC-safe payload ``FileFinder-{ver}.zip`` — extracting the exe
+    bundle over a python install would corrupt it.
+    """
+    from filefinder.updater.installer import is_frozen_install
+
+    if not is_frozen_install():
+        exact = f"filefinder-{version}.zip".lower()
+        match = next(
+            (a for a in assets if a.get("name", "").lower() == exact), None
+        )
+        if match is not None:
+            return match
+    return next(
+        (
+            a
+            for a in assets
+            if f"-{suffix}" in a.get("name", "") and a.get("name", "").endswith(".zip")
+        ),
+        None,
+    )
+
+
 def check_update(current_version: str) -> dict[str, Any] | None:
     """Check GitHub for a newer release of FileFinder.
 
@@ -132,14 +161,7 @@ def check_update(current_version: str) -> dict[str, Any] | None:
 
     suffix = _platform_suffix()
     assets: list[dict[str, Any]] = data.get("assets") or []
-    zip_asset = next(
-        (
-            a
-            for a in assets
-            if f"-{suffix}" in a.get("name", "") and a.get("name", "").endswith(".zip")
-        ),
-        None,
-    )
+    zip_asset = _select_zip_asset(assets, tag.lstrip("vV"), suffix)
     if zip_asset is None:
         logger.info("Release %s has no asset for platform '%s'", tag, suffix)
         return None

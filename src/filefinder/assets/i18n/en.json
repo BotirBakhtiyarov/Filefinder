@@ -198,5 +198,7 @@
   "license.current_free": "Current plan: Free",
   "license.current_pro": "Current plan: 💎 Pro",
   "license.back": "Back",
-  "license.cancel": "Cancel"
+  "license.cancel": "Cancel",
+  "update.available": "Update available: v{version}",
+  "update.now": "Update now"
 }

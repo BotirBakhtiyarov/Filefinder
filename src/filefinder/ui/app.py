@@ -100,6 +100,45 @@ class FileFinderApp:
         # with the user's standard folders on first run) + live watcher.
         self.page.run_task(self._auto_index)
 
+        # Background update check (at most once per day) with a snackbar.
+        self.page.run_task(self._check_updates_on_start)
+
+    # ------------------------------------------------------------------
+    # Automatic update check
+    # ------------------------------------------------------------------
+
+    async def _check_updates_on_start(self) -> None:
+        """Check GitHub for a newer release and offer it via a snackbar."""
+        try:
+            import time
+
+            await asyncio.sleep(8)  # let the UI settle first
+            from filefinder import __version__
+            from filefinder.core.db import get_db
+            from filefinder.updater import github_checker
+
+            db = get_db()
+            last = float(kv_get(db, "last_update_check", "0") or 0)
+            if time.time() - last < 86400:  # once per day
+                return
+            kv_set(db, "last_update_check", str(time.time()))
+
+            info = await asyncio.to_thread(
+                github_checker.check_update, __version__
+            )
+            if not info:
+                return
+            self.page.show_dialog(
+                ft.SnackBar(
+                    ft.Text(t("update.available", version=info["version"])),
+                    action=t("update.now"),
+                    on_action=lambda e: self.page.run_task(self.navigate_to, 3),
+                    duration=15000,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001 - update check must never crash
+            logger.debug("Startup update check skipped: %s", exc)
+
     # ------------------------------------------------------------------
     # Automatic indexing
     # ------------------------------------------------------------------

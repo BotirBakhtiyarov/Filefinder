@@ -198,5 +198,7 @@
   "license.current_free": "当前版本：免费版",
   "license.current_pro": "当前版本：💎 Pro",
   "license.back": "返回",
-  "license.cancel": "取消"
+  "license.cancel": "取消",
+  "update.available": "新版本可用：v{version}",
+  "update.now": "立即更新"
 }

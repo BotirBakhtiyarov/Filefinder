@@ -198,5 +198,7 @@
   "license.current_free": "Joriy versiya: Bepul",
   "license.current_pro": "Joriy versiya: 💎 Pro",
   "license.back": "Orqaga",
-  "license.cancel": "Bekor qilish"
+  "license.cancel": "Bekor qilish",
+  "update.available": "Yangi versiya mavjud: v{version}",
+  "update.now": "Yangilash"
 }

@@ -27,6 +27,11 @@ class InstallError(Exception):
     """Raised when installing an update package fails."""
 
 
+def is_frozen_install() -> bool:
+    """Return True when running as a frozen (flet build) executable."""
+    return bool(getattr(sys, "frozen", False))
+
+
 def _app_dir() -> Path:
     """Return the application installation directory.
 
@@ -96,6 +101,9 @@ def install(zip_path: str | Path) -> Path:
         InstallError: When the zip cannot be extracted (the previous
             installation is restored first).
     """
+    if not is_frozen_install():
+        return _install_python(zip_path)
+
     zip_path = Path(zip_path)
     app_dir = _app_dir()
     backup_dir = app_dir / _BACKUP_DIR
@@ -124,8 +132,69 @@ def install(zip_path: str | Path) -> Path:
     return app_dir
 
 
+def _install_python(zip_path: str | Path) -> Path:
+    """Install an update for a source/zip (python) installation.
+
+    The SAC-safe payload zip contains ``app/`` (python sources),
+    ``requirements.txt`` etc. Only the code directory is replaced — the
+    venv, wheels and bundled python installer stay untouched.
+
+    Args:
+        zip_path: Path to the downloaded payload ``.zip``.
+
+    Returns:
+        The installation directory that was updated.
+
+    Raises:
+        InstallError: On any failure (the previous code is restored).
+    """
+    import tempfile
+
+    zip_path = Path(zip_path)
+    install_root = _app_dir()
+    app_code = install_root / "app"
+    backup_dir = install_root / "_backup_app"
+
+    logger.info("Installing python update %s into %s", zip_path, install_root)
+    try:
+        with tempfile.TemporaryDirectory() as tmp:
+            with zipfile.ZipFile(zip_path) as zf:
+                zf.extractall(tmp)
+            payload_app = Path(tmp) / "app"
+            if not payload_app.is_dir():
+                raise InstallError(t("updater.error.install_failed"))
+
+            if backup_dir.exists():
+                shutil.rmtree(backup_dir)
+            if app_code.exists():
+                shutil.copytree(app_code, backup_dir)
+            try:
+                shutil.rmtree(app_code, ignore_errors=True)
+                shutil.copytree(payload_app, app_code)
+                payload_req = Path(tmp) / "requirements.txt"
+                if payload_req.is_file():
+                    shutil.copy2(payload_req, install_root / "requirements.txt")
+            except Exception:
+                logger.exception("Update failed, restoring backup")
+                shutil.rmtree(app_code, ignore_errors=True)
+                if backup_dir.exists():
+                    shutil.copytree(backup_dir, app_code)
+                raise
+    except InstallError:
+        raise
+    except Exception as exc:
+        logger.error("Python update failed: %s", exc)
+        raise InstallError(t("updater.error.install_failed")) from exc
+
+    logger.info("Python update installed successfully")
+    return install_root
+
+
 def restart() -> None:
     """Relaunch the application and terminate the current process.
+
+    Frozen installs relaunch the exe; source/zip installs relaunch the
+    ``FileFinder.vbs`` launcher when present, otherwise the entry script.
 
     Raises:
         NotImplementedError: On non-Windows platforms (manual restart
@@ -133,7 +202,22 @@ def restart() -> None:
     """
     if not sys.platform.startswith("win"):
         raise NotImplementedError("manual restart")
-    exe = sys.executable
-    logger.info("Restarting application: %s", exe)
-    subprocess.Popen([exe])
+
+    if is_frozen_install():
+        exe = sys.executable
+        logger.info("Restarting frozen app: %s", exe)
+        subprocess.Popen([exe])
+    else:
+        install_root = _app_dir()
+        vbs = install_root / "FileFinder.vbs"
+        if vbs.is_file():
+            logger.info("Restarting via launcher: %s", vbs)
+            subprocess.Popen(["wscript.exe", str(vbs)])
+        else:
+            pythonw = Path(sys.executable).with_name("pythonw.exe")
+            entry = install_root / "app" / "main.py"
+            if not pythonw.is_file():
+                pythonw = Path(sys.executable)
+            logger.info("Restarting via %s %s", pythonw, entry)
+            subprocess.Popen([str(pythonw), str(entry)], cwd=install_root)
     os._exit(0)
