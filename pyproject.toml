@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "filefinder"
-version = "3.0.3"
+version = "3.0.4"
 description = "FileFinder v3 — cross-platform semantic file search and RAG chat desktop app (Flet)"
 authors = ["Botir Bakhtiyarov"]
 license = "MIT"

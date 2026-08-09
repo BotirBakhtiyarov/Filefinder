@@ -229,6 +229,9 @@ class ChatView(ft.Column):
         except Exception as exc:  # noqa: BLE001
             logger.warning("Could not load chat history: %s", exc)
             return
+        # Clear first — did_mount fires again when the view is re-mounted
+        # (navigating away and back), which would duplicate every bubble.
+        self.messages.controls.clear()
         for item in history or []:
             role, content = _normalize_history_item(item)
             if content:
