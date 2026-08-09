@@ -1,9 +1,9 @@
 """Chat message bubble component.
 
-User messages are right-aligned on an accent container; assistant messages
-are left-aligned on a surface-variant container. Text is selectable.
-Assistant bubbles support an optional collapsible "thinking" section and
-incremental (streaming) text updates.
+User messages are right-aligned accent bubbles with plain selectable text.
+Assistant messages render **Markdown** full-width (ChatGPT-style) and
+support an optional collapsible "thinking" section plus incremental
+(streaming) updates for both channels.
 """
 
 from __future__ import annotations
@@ -40,11 +40,11 @@ def split_thinking(text: str) -> tuple[str, str]:
 
 
 class ChatBubble(ft.Row):
-    """A single chat message bubble.
+    """A single chat message.
 
     Args:
         role: ``"user"`` or ``"assistant"``.
-        text: message content (rendered as selectable text).
+        text: message content. Assistant content is rendered as Markdown.
         thinking: optional reasoning text shown in a collapsed dropdown
             above the answer (assistant messages only).
         think_label: localized label for the thinking dropdown.
@@ -57,35 +57,48 @@ class ChatBubble(ft.Row):
         thinking: str = "",
         think_label: str = "Thinking",
     ) -> None:
-        is_user = role == "user"
+        self.is_user = role == "user"
         self._think_label = think_label
         self._think_tile: ft.ExpansionTile | None = None
         self._think_text: ft.Text | None = None
 
-        self._text_control = ft.Text(text, selectable=True, size=14)
+        if self.is_user:
+            self._text_control: ft.Control = ft.Text(text, selectable=True, size=14)
+            bubble_content: ft.Control = ft.Column(
+                [self._text_control], spacing=4, tight=True
+            )
+            container = ft.Container(
+                content=bubble_content,
+                bgcolor=ft.Colors.PRIMARY_CONTAINER,
+                border_radius=ft.BorderRadius.only(
+                    top_left=14, top_right=14, bottom_left=14, bottom_right=2
+                ),
+                padding=ft.Padding.symmetric(horizontal=14, vertical=10),
+                width=_estimate_width(text) if text else None,
+            )
+            super().__init__(
+                controls=[container], alignment=ft.MainAxisAlignment.END
+            )
+            return
+
+        # --- assistant: full-width Markdown body ----------------------
+        self._md = ft.Markdown(
+            text,
+            selectable=True,
+            extension_set=ft.MarkdownExtensionSet.GITHUB_WEB,
+            soft_line_break=True,
+        )
         controls: list[ft.Control] = []
         if thinking:
             controls.append(self._build_think_tile(thinking))
-        controls.append(self._text_control)
+        controls.append(self._md)
 
-        bubble = ft.Container(
+        container = ft.Container(
             content=ft.Column(controls, spacing=4, tight=True),
-            bgcolor=(
-                ft.Colors.PRIMARY_CONTAINER if is_user else ft.Colors.SECONDARY_CONTAINER
-            ),
-            border_radius=ft.BorderRadius.only(
-                top_left=14,
-                top_right=14,
-                bottom_left=14 if not is_user else 2,
-                bottom_right=2 if not is_user else 14,
-            ),
-            padding=ft.Padding.symmetric(horizontal=14, vertical=10),
-            width=_estimate_width(text) if text else None,
+            padding=ft.Padding.symmetric(horizontal=6, vertical=4),
+            expand=True,
         )
-        super().__init__(
-            controls=[bubble],
-            alignment=ft.MainAxisAlignment.END if is_user else ft.MainAxisAlignment.START,
-        )
+        super().__init__(controls=[container], alignment=ft.MainAxisAlignment.START)
 
     # ------------------------------------------------------------------
     # Thinking dropdown
@@ -97,7 +110,13 @@ class ChatBubble(ft.Row):
             thinking, selectable=True, size=12, color=ft.Colors.OUTLINE
         )
         self._think_tile = ft.ExpansionTile(
-            title=ft.Text(self._think_label, size=12, color=ft.Colors.OUTLINE),
+            title=ft.Row(
+                [
+                    ft.Icon(ft.Icons.PSYCHOLOGY, size=14, color=ft.Colors.OUTLINE),
+                    ft.Text(self._think_label, size=12, color=ft.Colors.OUTLINE),
+                ],
+                spacing=6,
+            ),
             controls=[self._think_text],
             expanded=False,
             dense=True,
@@ -117,19 +136,32 @@ class ChatBubble(ft.Row):
             pass
 
     def append_answer(self, chunk: str) -> None:
-        """Append a streamed answer chunk to the bubble text."""
-        self._text_control.value = (self._text_control.value or "") + chunk
+        """Append a streamed answer chunk (Markdown re-renders in place)."""
+        if self.is_user:
+            self._text_control.value = (self._text_control.value or "") + chunk
+        else:
+            self._md.value = (self._md.value or "") + chunk
         self._safe_update()
 
     def append_thinking(self, chunk: str) -> None:
         """Append a streamed thinking chunk (creates the tile lazily)."""
         if self._think_tile is None:
-            column = self.controls[0].content  # the bubble's ft.Column
+            column = self.controls[0].content  # the container's ft.Column
             column.controls.insert(0, self._build_think_tile(""))
         self._think_text.value = (self._think_text.value or "") + chunk
         self._safe_update()
 
     def set_text(self, text: str) -> None:
-        """Replace the bubble text (used to clear the typing indicator)."""
-        self._text_control.value = text
+        """Replace the message text (e.g. to clear the typing indicator)."""
+        if self.is_user:
+            self._text_control.value = text
+        else:
+            self._md.value = text
         self._safe_update()
+
+    @property
+    def current_text(self) -> str:
+        """Return the current message text."""
+        if self.is_user:
+            return str(self._text_control.value or "")
+        return str(self._md.value or "")

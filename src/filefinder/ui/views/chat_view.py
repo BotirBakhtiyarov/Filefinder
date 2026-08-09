@@ -382,7 +382,7 @@ class ChatView(ft.Column):
         except Exception as exc:
             logger.exception("Chat send failed")
             self._app.show_snackbar(t("chat.error", error=exc), error=True)
-            if not (bubble._text_control.value or ""):
+            if not bubble.current_text:
                 bubble.set_text(t("chat.llm_unavailable"))
         finally:
             self.send_button.disabled = False
